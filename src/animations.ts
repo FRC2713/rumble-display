@@ -137,7 +137,7 @@ export class ConfettiAnimation {
       // Spawn at either left or right edge
       const spawnLeft = Math.random() < 0.5
       const yNoise = Math.random() * (window.innerHeight / 2)
-      const xNoise = Math.random() * (window.innerWidth / 2)
+      const xNoise = Math.random() * (window.innerWidth / 2) - 5
       const startX = spawnLeft ? (0 + xNoise) : (window.innerWidth - xNoise)
 
       // Calculate angle towards center

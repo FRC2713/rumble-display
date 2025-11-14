@@ -118,9 +118,11 @@ body {
 .slider-container {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
   flex: 1;
   max-width: 400px;
+  min-width: 400px;
 }
 
 .slider-label {
@@ -174,6 +176,8 @@ body {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  min-width: 90px;
+  justify-content: flex-start;
 }
 
 .config-checkbox {

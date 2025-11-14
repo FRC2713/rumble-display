@@ -32,6 +32,7 @@ function App() {
   const [pulseDuration, setPulseDuration] = useState<number>(15)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
+  const [pulseEnabled, setPulseEnabled] = useState<boolean>(true)
 
   // ======= CSV File Upload =======
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,10 +63,12 @@ function App() {
   const cycleMatches = () => {
     if (currentIndex + numTables < matches.length) {
       setCurrentIndex(currentIndex + numTables)
-      setIsPulsing(true)
-      setTimeout(() => {
-        setIsPulsing(false)
-      }, pulseDuration * 1000)
+      if (pulseEnabled) {
+        setIsPulsing(true)
+        setTimeout(() => {
+          setIsPulsing(false)
+        }, pulseDuration * 1000)
+      }
     }
   }
 
@@ -217,14 +220,14 @@ function App() {
                   <input
                     id="table-spin"
                     type="range"
-                    min="30"
+                    min="20"
                     max="600"
                     value={tableSpinInterval}
                     onChange={(e) => setTableSpinInterval(parseInt(e.target.value))}
                     className="config-slider"
                     disabled={!tableSpinEnabled}
                   />
-                  <span className="slider-label">Sparse</span>
+                  <span className="slider-label">Infrequently</span>
                 </div>
                 <label className="checkbox-container">
                   <input
@@ -248,14 +251,14 @@ function App() {
                   <input
                     id="ondeck-jiggle"
                     type="range"
-                    min="30"
+                    min="20"
                     max="600"
                     value={onDeckJiggleInterval}
                     onChange={(e) => setOnDeckJiggleInterval(parseInt(e.target.value))}
                     className="config-slider"
                     disabled={!onDeckJiggleEnabled}
                   />
-                  <span className="slider-label">Sparse</span>
+                  <span className="slider-label">Infrequently</span>
                 </div>
                 <label className="checkbox-container">
                   <input
@@ -270,15 +273,28 @@ function App() {
             </div>
 
             <div className="config-group">
-              <label htmlFor="pulse-duration">Pulse Duration (seconds):</label>
-              <input
-                id="pulse-duration"
-                type="number"
-                min="0"
-                value={pulseDuration}
-                onChange={(e) => setPulseDuration(parseInt(e.target.value) || 0)}
-                className="config-input"
-              />
+              <div className="slider-row" style={{justifyContent: 'center', gap: '1rem'}}>
+                <label htmlFor="pulse-duration">Match Start Animation Duration (seconds):</label>
+                <input
+                  id="pulse-duration"
+                  type="number"
+                  min="0"
+                  value={pulseDuration}
+                  onChange={(e) => setPulseDuration(parseInt(e.target.value) || 0)}
+                  className="config-input"
+                  disabled={!pulseEnabled}
+                  style={{margin: 0}}
+                />
+                <label className="checkbox-container">
+                  <input
+                    type="checkbox"
+                    checked={pulseEnabled}
+                    onChange={(e) => setPulseEnabled(e.target.checked)}
+                    className="config-checkbox"
+                  />
+                  <span className="checkbox-label">Enable</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
