@@ -27,9 +27,9 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(480)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(420)
-  const [pulseDuration, setPulseDuration] = useState<number>(30)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(120)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(110)
+  const [pulseDuration, setPulseDuration] = useState<number>(15)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
 
