@@ -121,14 +121,18 @@ export interface ConfettiParticle {
   rotation: number
   rotationSpeed: number
   color: string
+  shape: 'regular' | 'lego'
 }
 
 export class ConfettiAnimation {
   static createConfetti(): ConfettiParticle[] {
+    const useLego = Math.random() < (1.0 / 4.0)
+
     const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#61dafb']
     const particles: ConfettiParticle[] = []
 
-    const nConfetti = 900 + Math.random() * 200
+    const shape = useLego ? 'lego' : 'regular'
+    const nConfetti = (useLego ? 60 : 700) + Math.random() * 100
     for (let i = 0; i < nConfetti; i++) {
       // Spawn at either left or right edge
       const spawnLeft = Math.random() < 0.5
@@ -154,7 +158,8 @@ export class ConfettiAnimation {
         vy: Math.sin(angle) * speed,
         rotation: Math.random() * 360,
         rotationSpeed: (Math.random() - 0.5) * 10,
-        color: colors[Math.floor(Math.random() * colors.length)]
+        color: colors[Math.floor(Math.random() * colors.length)],
+        shape: shape
       })
     }
 

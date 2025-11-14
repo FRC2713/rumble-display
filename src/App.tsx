@@ -293,7 +293,7 @@ function App() {
           {confettiParticles.map((particle) => (
             <div
               key={particle.id}
-              className="confetti"
+              className={`confetti ${particle.shape === 'lego' ? 'confetti-lego' : ''}`}
               style={{
                 transform: `translate(${particle.x}px, ${particle.y}px) rotate(${particle.rotation}deg)`,
                 backgroundColor: particle.color
