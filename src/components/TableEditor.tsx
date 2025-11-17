@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, ClipboardEvent, KeyboardEvent } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import type { ClipboardEvent, KeyboardEvent } from 'react'
 import type { Match } from '../types/Match'
 import './TableEditor.css'
 
@@ -37,7 +38,7 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
     }
     return [{ id: '1', match: '1', time: '', r1: '', r2: '', b1: '', b2: '', g1: '', g2: '' }]
   })
-  const [selectedCell, setSelectedCell] = useState<{ rowId: string; colIndex: number } | null>(null)
+  const [_selectedCell, setSelectedCell] = useState<{ rowId: string; colIndex: number } | null>(null)
   const tableRef = useRef<HTMLDivElement>(null)
 
   const addRow = useCallback(() => {

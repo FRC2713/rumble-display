@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, ClipboardEvent, KeyboardEvent } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import type { ClipboardEvent, KeyboardEvent } from 'react'
 import './TableEditor.css'
 
 interface TeamRow {

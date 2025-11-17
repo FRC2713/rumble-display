@@ -1,5 +1,3 @@
-import type { Team } from '../types/Team'
-
 export class TeamLoader {
   /**
    * Parse CSV text content into a Map of team number -> team name

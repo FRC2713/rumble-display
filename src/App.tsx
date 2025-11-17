@@ -19,7 +19,7 @@ function App() {
   const [startMatchInput, setStartMatchInput] = useState<string>('')
   const [isPulsing, setIsPulsing] = useState<boolean>(false)
   const [spinningTableIndex, setSpinningTableIndex] = useState<number>(-1)
-  const [jigglingOnDeckIndex, setJigglingOnDeckIndex] = useState<number>(-1)
+  const [_jigglingOnDeckIndex, setJigglingOnDeckIndex] = useState<number>(-1)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
