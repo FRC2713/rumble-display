@@ -358,8 +358,8 @@ body {
   transition: all 0.3s;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
+  justify-content: flex-start;
+  padding: 0;
 }
 
 .rocker-slider::before {
@@ -380,7 +380,7 @@ body {
 }
 
 .rocker-label {
-  position: relative;
+  position: absolute;
   z-index: 2;
   font-size: 0.85rem;
   font-weight: bold;
@@ -389,13 +389,17 @@ body {
   pointer-events: none;
   width: 74px;
   text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .rocker-label-left {
+  left: 4px;
   color: #1a1a1a;
 }
 
 .rocker-label-right {
+  right: 4px;
   color: #999;
 }
 
