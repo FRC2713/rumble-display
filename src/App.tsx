@@ -433,7 +433,7 @@ function App() {
 
       <div className="display-area">
         <div className="active-tables">
-          <h2>Active Tables</h2>
+          <h2>Current Match</h2>
           {currentMatch && (
             <div className="tables-grid">
               {/* Red Table */}
