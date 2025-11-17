@@ -87,7 +87,6 @@ export class TableSpinAnimation {
 
 export class OnDeckJiggleAnimation {
   static createSequentialJiggle(
-    numTables: number,
     matchesLength: number,
     currentIndex: number,
     setJigglingOnDeckIndex: (index: number | ((prev: number) => number)) => void,
@@ -97,7 +96,8 @@ export class OnDeckJiggleAnimation {
       // Don't jiggle if pulsing
       if (isPulsing) return
 
-      const onDeckMatchesCount = Math.min(numTables * 2, matchesLength - currentIndex - numTables)
+      // Jiggle ALL on-deck matches (all remaining matches after current)
+      const onDeckMatchesCount = matchesLength - currentIndex - 1
       if (onDeckMatchesCount <= 0) return
 
       for (let i = 0; i < onDeckMatchesCount; i++) {
@@ -105,8 +105,8 @@ export class OnDeckJiggleAnimation {
           setJigglingOnDeckIndex(i)
           setTimeout(() => {
             setJigglingOnDeckIndex(prev => prev === i ? -1 : prev)
-          }, 1000)
-        }, i * 800) // 0.8 second delay between each card
+          }, 600) // Duration matches CSS animation
+        }, i * 700) // 0.7 second delay between each card
       }
     }
   }

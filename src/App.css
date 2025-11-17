@@ -468,14 +468,14 @@ body {
 }
 
 .table-number {
-  font-size: clamp(1.5rem, 3vw, 3rem);
+  font-size: clamp(1.2rem, 2.5vw, 2.5rem);
   font-weight: bold;
   color: white;
-  padding: clamp(0.5rem, 1.5vh, 1rem) clamp(1rem, 2vw, 2rem);
+  padding: clamp(0.4rem, 1.2vh, 0.8rem) clamp(0.8rem, 1.6vw, 1.6rem);
   border-radius: 50%;
   flex-shrink: 0;
-  width: clamp(3rem, 6vw, 6rem);
-  height: clamp(3rem, 6vw, 6rem);
+  width: clamp(2.5rem, 5vw, 5rem);
+  height: clamp(2.5rem, 5vw, 5rem);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -502,7 +502,7 @@ body {
 
 .team {
   width: 90%;
-  padding: clamp(0.75rem, 2vh, 1.5rem);
+  padding: clamp(1rem, 2.5vh, 2rem);
   text-align: left;
   flex: 1;
   min-height: 0;
@@ -774,6 +774,10 @@ body {
 }
 
 /* Jiggle Animation */
+.jiggle {
+  animation: jiggle-up 0.6s ease-in-out;
+}
+
 @keyframes jiggle-up {
   0%, 100% {
     transform: translateY(0);

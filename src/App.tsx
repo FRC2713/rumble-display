@@ -19,14 +19,14 @@ function App() {
   const [startMatchInput, setStartMatchInput] = useState<string>('')
   const [isPulsing, setIsPulsing] = useState<boolean>(false)
   const [spinningTableIndex, setSpinningTableIndex] = useState<number>(-1)
-  const [_jigglingOnDeckIndex, setJigglingOnDeckIndex] = useState<number>(-1)
+  const [jigglingOnDeckIndex, setJigglingOnDeckIndex] = useState<number>(-1)
   const [confettiParticles, setConfettiParticles] = useState<ConfettiParticle[]>([])
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(120)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(110)
-  const [pulseDuration, setPulseDuration] = useState<number>(15)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(60)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(45)
+  const [pulseDuration, setPulseDuration] = useState<number>(10)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
   const [pulseEnabled, setPulseEnabled] = useState<boolean>(true)
@@ -202,7 +202,6 @@ function App() {
     if (matches.length === 0 || onDeckJiggleInterval <= 0 || !onDeckJiggleEnabled) return
 
     const jiggleAnimation = OnDeckJiggleAnimation.createSequentialJiggle(
-      3, // Always 3 tables (but on-deck shows next match)
       matches.length,
       currentIndex,
       setJigglingOnDeckIndex,
@@ -484,8 +483,8 @@ function App() {
         <div className="on-deck">
           <h2>On Deck</h2>
           <div className="on-deck-list">
-            {onDeckMatches.map((match) => (
-              <div key={match.number} className="on-deck-card-compact">
+            {onDeckMatches.map((match, index) => (
+              <div key={match.number} className={`on-deck-card-compact ${jigglingOnDeckIndex === index ? 'jiggle' : ''}`}>
                 <div className="match-number-ondeck">Match #{match.number}:</div>
                 <div className="team-inline team-inline-red team-inline-1">
                   <span className="team-label-small">R1:</span>
