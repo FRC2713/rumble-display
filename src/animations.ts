@@ -166,6 +166,75 @@ export class ConfettiAnimation {
     return particles
   }
 
+  static createCombinedConfetti(): ConfettiParticle[] {
+    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#61dafb']
+    const particles: ConfettiParticle[] = []
+
+    let particleId = 0
+
+    // Create regular confetti
+    const nRegular = 700 + Math.random() * 100
+    for (let i = 0; i < nRegular; i++) {
+      const spawnLeft = Math.random() < 0.5
+      const yNoise = Math.random() * (window.innerHeight / 2)
+      const xNoise = Math.random() * (window.innerWidth / 2) - 5
+      const startX = spawnLeft ? (0 + xNoise) : (window.innerWidth - xNoise)
+
+      let angle
+      if (spawnLeft) {
+        angle = (Math.random() * 90) * (Math.PI / 180)
+      } else {
+        angle = (90 + Math.random() * 90) * (Math.PI / 180)
+      }
+
+      const speed = 1 + Math.random() * 5
+
+      particles.push({
+        id: particleId++,
+        x: startX,
+        y: -yNoise,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        shape: 'regular'
+      })
+    }
+
+    // Create LEGO confetti
+    const nLego = 60 + Math.random() * 100
+    for (let i = 0; i < nLego; i++) {
+      const spawnLeft = Math.random() < 0.5
+      const yNoise = Math.random() * (window.innerHeight / 2)
+      const xNoise = Math.random() * (window.innerWidth / 2) - 5
+      const startX = spawnLeft ? (0 + xNoise) : (window.innerWidth - xNoise)
+
+      let angle
+      if (spawnLeft) {
+        angle = (Math.random() * 90) * (Math.PI / 180)
+      } else {
+        angle = (90 + Math.random() * 90) * (Math.PI / 180)
+      }
+
+      const speed = 1 + Math.random() * 5
+
+      particles.push({
+        id: particleId++,
+        x: startX,
+        y: -yNoise,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 10,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        shape: 'lego'
+      })
+    }
+
+    return particles
+  }
+
   static updateConfetti(particles: ConfettiParticle[], deltaTime: number): ConfettiParticle[] {
     const gravity = 0.5 // pixels per frame squared
 

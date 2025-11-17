@@ -1,0 +1,226 @@
+.table-editor-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #1a1a1a;
+  padding: 2rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.table-editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-shrink: 0;
+}
+
+.table-editor-header h2 {
+  color: #61dafb;
+  font-size: 1.8rem;
+  margin: 0;
+}
+
+.table-editor-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.editor-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.add-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.add-button:hover {
+  background-color: #45a049;
+}
+
+.save-button {
+  background-color: #61dafb;
+  color: #1a1a1a;
+}
+
+.save-button:hover {
+  background-color: #4fa8c5;
+}
+
+.cancel-button {
+  background-color: #666;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #555;
+}
+
+.table-editor-instructions {
+  background-color: #2a2a2a;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.table-editor-instructions p {
+  margin: 0.25rem 0;
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+.table-editor-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+  border: 2px solid #444;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.match-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background-color: #2a2a2a;
+}
+
+.match-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #1a1a1a;
+  z-index: 10;
+}
+
+.match-table th {
+  padding: 1rem;
+  text-align: left;
+  color: #61dafb;
+  font-weight: bold;
+  border-bottom: 2px solid #444;
+  white-space: nowrap;
+}
+
+.row-number-col {
+  width: 50px;
+}
+
+.actions-col {
+  width: 80px;
+}
+
+.match-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #333;
+}
+
+.match-table tbody tr:hover {
+  background-color: #333;
+}
+
+.match-table input {
+  width: 100%;
+  padding: 0.4rem;
+  background-color: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: white;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.match-table input:focus {
+  outline: none;
+  border-color: #61dafb;
+  background-color: #252525;
+}
+
+.match-table input.readonly {
+  background-color: #2a2a2a;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.match-table input::placeholder {
+  color: #666;
+}
+
+.row-number-col {
+  width: 50px;
+  text-align: center;
+  color: #999;
+  font-weight: bold;
+  padding: 0.5rem;
+}
+
+.actions-col {
+  width: 80px;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+.remove-button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background-color: #ff4444;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.remove-button:hover {
+  background-color: #cc0000;
+}
+
+.table-editor-footer {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.row-count {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar styling */
+.table-editor-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.table-editor-scroll::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.table-editor-scroll::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 6px;
+}
+
+.table-editor-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
