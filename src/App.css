@@ -253,7 +253,7 @@ body {
 .controls {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
   padding: 1rem;
   background-color: #2a2a2a;
   border-radius: 8px;
@@ -261,6 +261,28 @@ body {
   flex-wrap: wrap;
   flex-shrink: 0;
   position: relative;
+}
+
+.elimination-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  background: linear-gradient(135deg, #cc6600 0%, #ff8800 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.elimination-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+.elimination-button:active {
+  transform: translateY(0);
 }
 
 .control-group {
@@ -448,6 +470,16 @@ body {
   min-height: 0;
 }
 
+.tables-grid.elimination-mode {
+  gap: 2%;
+  margin: 0 13rem;
+}
+
+.tables-grid.elimination-mode .table-card {
+  max-width: none;
+  flex: 1;
+}
+
 .table-card {
   background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
   border-radius: 12px;
@@ -465,6 +497,7 @@ body {
   min-height: 0;
   height: 100%;
   gap: clamp(0.25rem, 1vh, 1rem);
+  position: relative;
 }
 
 .table-number {
@@ -848,6 +881,186 @@ body {
 
 .team-inline-blue.jiggle {
   animation: jiggle-down 1.0s ease-in-out;
+}
+
+/* Team Dropdown Styling */
+.team-dropdown-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  width: 88%;
+  max-width: 88%;
+}
+
+.team.team-1 .team-dropdown-container {
+  margin-left: 11.11%;
+  margin-right: 0;
+}
+
+.team.team-2 .team-dropdown-container {
+  margin-left: 0;
+  margin-right: 11.11%;
+}
+
+.team-label-dropdown {
+  color: #999;
+  font-weight: bold;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: clamp(0.8rem, 1.5vw, 1.3rem);
+}
+
+.team-dropdown {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: clamp(0.75rem, 1.3vw, 1.1rem);
+  font-weight: bold;
+  background-color: #1a1a1a;
+  color: white;
+  border: 2px solid #444;
+  border-radius: 6px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.team-dropdown:focus {
+  outline: none;
+  border-color: #61dafb;
+}
+
+.team-dropdown option {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 0.5rem;
+}
+
+/* Small Team Dropdown for On-Deck */
+.team-dropdown-small {
+  flex: 1;
+  padding: 0.25rem 0.4rem;
+  font-size: clamp(0.6rem, 1.1vw, 0.9rem);
+  font-weight: bold;
+  background-color: #1a1a1a;
+  color: white;
+  border: 2px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.team-dropdown-small:focus {
+  outline: none;
+  border-color: #61dafb;
+}
+
+.team-dropdown-small option {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 0.3rem;
+}
+
+/* Hide Table Button */
+.hide-table-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(128, 128, 128, 0.8);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 20px;
+  line-height: 30px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 10;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  font-weight: normal;
+}
+
+.hide-table-button:hover {
+  background-color: rgba(160, 160, 160, 1);
+  transform: scale(1.1);
+}
+
+.hide-table-button:active {
+  transform: scale(0.95);
+}
+
+/* Show Tables Panel */
+.show-tables-panel {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.show-tables-panel h3 {
+  color: #61dafb;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  text-align: center;
+}
+
+.show-table-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  border: 2px solid;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.show-table-button.table-red {
+  background-color: rgba(220, 38, 38, 0.3);
+  border-color: #dc2626;
+}
+
+.show-table-button.table-red:hover {
+  background-color: rgba(220, 38, 38, 0.6);
+  transform: translateX(-2px);
+}
+
+.show-table-button.table-green {
+  background-color: rgba(34, 197, 94, 0.3);
+  border-color: #22c55e;
+}
+
+.show-table-button.table-green:hover {
+  background-color: rgba(34, 197, 94, 0.6);
+  transform: translateX(-2px);
+}
+
+.show-table-button.table-blue {
+  background-color: rgba(59, 130, 246, 0.3);
+  border-color: #3b82f6;
+}
+
+.show-table-button.table-blue:hover {
+  background-color: rgba(59, 130, 246, 0.6);
+  transform: translateX(-2px);
+}
+
+.show-table-button:active {
+  transform: translateX(-2px) scale(0.95);
 }
 
 /* Confetti */
