@@ -12,6 +12,7 @@ import { CsvLoader } from './services/CsvLoader'
 import { TeamLoader } from './services/TeamLoader'
 import { TableEditor } from './components/TableEditor'
 import { TeamEditor } from './components/TeamEditor'
+import { EliminationOnDeckTable } from './components/EliminationOnDeckTable'
 
 function App() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -48,7 +49,7 @@ function App() {
     g2: ''
   })
   const [onDeckEliminationMatches, setOnDeckEliminationMatches] = useState<Match[]>(
-    Array.from({ length: 6 }, (_, i) => ({
+    Array.from({ length: 10 }, (_, i) => ({
       number: i,
       r1: '',
       r2: '',
@@ -61,6 +62,7 @@ function App() {
   const [hiddenTables, setHiddenTables] = useState<Set<string>>(new Set())
   const [preservedMatches, setPreservedMatches] = useState<Match[]>([])
   const [preservedIndex, setPreservedIndex] = useState<number>(0)
+  const [isTipVisible, setIsTipVisible] = useState<boolean>(true)
 
   // ======= Data Loading =======
   // Load default team names and matches on mount
@@ -135,7 +137,7 @@ function App() {
       g2: ''
     })
     setOnDeckEliminationMatches(
-      Array.from({ length: 6 }, (_, i) => ({
+      Array.from({ length: 10 }, (_, i) => ({
         number: i,
         r1: '',
         r2: '',
@@ -154,14 +156,6 @@ function App() {
     }))
   }
 
-  const handleOnDeckEliminationTeamChange = (matchIndex: number, position: 'r1' | 'r2' | 'b1' | 'b2' | 'g1' | 'g2', teamNumber: string) => {
-    setOnDeckEliminationMatches(prev =>
-      prev.map((match, idx) =>
-        idx === matchIndex ? { ...match, [position]: teamNumber } : match
-      )
-    )
-  }
-
   const handleExitEliminationMode = () => {
     // Restore the preserved matches and index
     setMatches(preservedMatches)
@@ -178,7 +172,7 @@ function App() {
       g2: ''
     })
     setOnDeckEliminationMatches(
-      Array.from({ length: 6 }, (_, i) => ({
+      Array.from({ length: 10 }, (_, i) => ({
         number: i,
         r1: '',
         r2: '',
@@ -325,7 +319,7 @@ function App() {
 
     const spinAnimation = TableSpinAnimation.createSequentialSpin(
       3, // Always 3 tables
-      isEliminationMode ? 1 : matches.length, // Use 1 match in elimination mode
+      isEliminationMode ? 3 : matches.length, // Use 3 in elimination mode to spin all tables
       isEliminationMode ? 0 : currentIndex,
       setSpinningTableIndex,
       isPulsing
@@ -343,8 +337,8 @@ function App() {
     if ((matches.length === 0 && !isEliminationMode) || onDeckJiggleInterval <= 0 || !onDeckJiggleEnabled) return
 
     const jiggleAnimation = OnDeckJiggleAnimation.createSequentialJiggle(
-      isEliminationMode ? 6 : matches.length, // Use 6 on-deck matches in elimination mode
-      isEliminationMode ? -1 : currentIndex, // Use -1 as current index in elimination mode (so all 6 on-deck are animated)
+      isEliminationMode ? 10 : matches.length, // Use 10 on-deck matches in elimination mode
+      isEliminationMode ? -1 : currentIndex, // Use -1 as current index in elimination mode (so all 10 on-deck are animated)
       setJigglingOnDeckIndex,
       isPulsing
     )
@@ -790,104 +784,29 @@ function App() {
         </div>
 
         <div className="on-deck">
-          <h2>On Deck</h2>
+          <div className="on-deck-header">
+            <h2>On Deck</h2>
+            {isEliminationMode && !isTipVisible && (
+              <button className="show-tip-button" onClick={() => setIsTipVisible(true)} title="Show Tip">
+                💡
+              </button>
+            )}
+          </div>
+          {isEliminationMode && isTipVisible && (
+            <div className="table-editor-instructions">
+              <button className="hide-table-button" onClick={() => setIsTipVisible(false)} title="Hide Tip">
+                ×
+              </button>
+              <p>Set a match with the dropdowns above. Or fill out the table below and use the "Next Match" button</p>
+              <p>💡 Tip: You can paste from Excel/Google Sheets! Click any cell and paste (Ctrl+V or Cmd+V)</p>
+            </div>
+          )}
           <div className="on-deck-list">
             {isEliminationMode ? (
-              onDeckEliminationMatches.map((match, matchIndex) => (
-              <div key={matchIndex} className="on-deck-card-compact">
-                <div className="match-number-ondeck">On Deck {matchIndex + 1}:</div>
-                <div className="team-inline team-inline-red team-inline-1">
-                  <span className="team-label-small">R1:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.r1}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'r1', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="team-inline team-inline-red team-inline-2">
-                  <span className="team-label-small">R2:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.r2}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'r2', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="team-inline team-inline-green team-inline-1">
-                  <span className="team-label-small">G1:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.g1}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'g1', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="team-inline team-inline-green team-inline-2">
-                  <span className="team-label-small">G2:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.g2}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'g2', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="team-inline team-inline-blue team-inline-1">
-                  <span className="team-label-small">B1:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.b1}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'b1', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="team-inline team-inline-blue team-inline-2">
-                  <span className="team-label-small">B2:</span>
-                  <select
-                    className="team-dropdown-small"
-                    value={match.b2}
-                    onChange={(e) => handleOnDeckEliminationTeamChange(matchIndex, 'b2', e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {teamNumbersList.map(num => (
-                      <option key={num} value={num}>
-                        {getTeamDisplay(num)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              ))
+              <EliminationOnDeckTable
+                matches={onDeckEliminationMatches}
+                onChange={setOnDeckEliminationMatches}
+              />
             ) : (
               onDeckMatches.map((match, index) => (
               <div key={match.number} className={`on-deck-card-compact ${jigglingOnDeckIndex === index ? 'jiggle' : ''}`}>
