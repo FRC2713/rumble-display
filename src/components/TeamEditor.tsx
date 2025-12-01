@@ -175,7 +175,7 @@ export function TeamEditor({ initialTeams, onSave, onCancel }: TeamEditorProps) 
       </div>
 
       <div className="table-editor-instructions">
-        <p>💡 Tip: You can paste from Excel/Google Sheets! Your cursor must be in the Match column when you paste (Ctrl+V or Cmd+V)</p>
+        <p>💡 Tip: You can paste from Excel/Google Sheets! Put your cursor in top-left-most cell of the table and then you paste (Ctrl+V or Cmd+V). ❗ Do not copy the table headers.</p>
         <p>Maximum 100 rows • If a team number appears multiple times, first instance is used</p>
       </div>
 

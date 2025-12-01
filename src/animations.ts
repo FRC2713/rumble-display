@@ -182,7 +182,7 @@ export class ConfettiAnimation {
     let particleId = 0
 
     // Create regular confetti
-    const nRegular = 500 + Math.random() * 100
+    const nRegular = 200 + Math.random() * 200
     for (let i = 0; i < nRegular; i++) {
       const spawnLeft = Math.random() < 0.5
       const yNoise = Math.random() * (window.innerHeight / 2)
@@ -212,7 +212,7 @@ export class ConfettiAnimation {
     }
 
     // Create LEGO confetti
-    const nLego = 60 + Math.random() * 50
+    const nLego = 60 + Math.random() * 30
     for (let i = 0; i < nLego; i++) {
       const spawnLeft = Math.random() < 0.5
       const yNoise = Math.random() * (window.innerHeight / 2)

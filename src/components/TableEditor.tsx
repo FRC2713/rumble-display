@@ -226,7 +226,7 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
       </div>
 
       <div className="table-editor-instructions">
-        <p>💡 Tip: You can paste from Excel/Google Sheets! Your cursor must be in the Match column when you paste (Ctrl+V or Cmd+V)</p>
+        <p>💡 Tip: You can paste from Excel/Google Sheets! Put your cursor in top-left-most cell of the table and then you paste (Ctrl+V or Cmd+V)</p>
         <p>❗ Do not copy the table headers. Note the column order is Match, Time, R1, R2, G1, G2, B1, B2</p>
         <p>Maximum 100 rows • Time column is optional</p>
       </div>

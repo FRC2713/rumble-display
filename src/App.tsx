@@ -27,8 +27,8 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(20)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(20)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(15)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(15)
   const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
@@ -178,6 +178,15 @@ function App() {
   }
 
   const handleExitEliminationMode = () => {
+    // If in finals mode, go back to the last elimination match
+    if (eliminationPhase === 'finals') {
+      setEliminationPhase('matches')
+      setEliminationCurrentIndex(eliminationMatches.length - 1)
+      setHiddenTables(new Set()) // Clear hidden tables when going back
+      return
+    }
+
+    // Otherwise, exit elimination mode completely
     // Restore the preserved matches and index
     setMatches(preservedMatches)
     setCurrentIndex(preservedIndex)
@@ -280,15 +289,27 @@ function App() {
     if (inputValue === '') return // Allow empty value without updating
 
     const value = parseInt(inputValue)
-    if (!isNaN(value) && value >= 1 && value <= matches.length) {
-      setCurrentIndex(value - 1) // Convert to 0-based index
+    if (isEliminationMode && eliminationPhase === 'matches') {
+      // Handle elimination matches
+      if (!isNaN(value) && value >= 1 && value <= eliminationMatches.length) {
+        setEliminationCurrentIndex(value - 1) // Convert to 0-based index
+      }
+    } else if (!isEliminationMode) {
+      // Handle regular matches
+      if (!isNaN(value) && value >= 1 && value <= matches.length) {
+        setCurrentIndex(value - 1) // Convert to 0-based index
+      }
     }
   }
 
-  // Sync input values with currentIndex
+  // Sync input values with currentIndex or eliminationCurrentIndex
   useEffect(() => {
-    setStartMatchInput(String(currentIndex + 1))
-  }, [currentIndex])
+    if (isEliminationMode && eliminationPhase === 'matches') {
+      setStartMatchInput(String(eliminationCurrentIndex + 1))
+    } else if (!isEliminationMode) {
+      setStartMatchInput(String(currentIndex + 1))
+    }
+  }, [currentIndex, eliminationCurrentIndex, isEliminationMode, eliminationPhase])
 
   // ======= Confetti =======
   const createConfetti = useCallback(() => {
@@ -495,7 +516,7 @@ function App() {
                   <input
                     id="table-spin"
                     type="range"
-                    min="20"
+                    min="10"
                     max="600"
                     value={tableSpinInterval}
                     onChange={(e) => setTableSpinInterval(parseInt(e.target.value))}
@@ -526,7 +547,7 @@ function App() {
                   <input
                     id="ondeck-jiggle"
                     type="range"
-                    min="20"
+                    min="10"
                     max="600"
                     value={onDeckJiggleInterval}
                     onChange={(e) => setOnDeckJiggleInterval(parseInt(e.target.value))}
@@ -609,14 +630,14 @@ function App() {
             <button onClick={handleStartEliminationMatches} className="cycle-button">
               Start Elimination Matches
             </button>
-            <button onClick={handleExitEliminationMode} className="cycle-button">
-              Exit Eliminations
+            <button onClick={handleExitEliminationMode} className="back-button">
+              Back To Prelims
             </button>
           </>
         ) : eliminationPhase === 'finals' ? (
           <>
-            <button onClick={handleExitEliminationMode} className="cycle-button">
-              Exit Eliminations
+            <button onClick={handleExitEliminationMode} className="back-button">
+              Back to Eliminations
             </button>
           </>
         ) : (
@@ -630,8 +651,8 @@ function App() {
                 Next Match
               </button>
             )}
-            <button onClick={handleExitEliminationMode} className="cycle-button">
-              Exit Eliminations
+            <button onClick={handleExitEliminationMode} className="back-button">
+              Back To Prelims
             </button>
           </>
         )}
@@ -722,7 +743,7 @@ function App() {
                   : 'Current Match'}
               </h2>
               {isEliminationMode && eliminationPhase === 'finals' && (
-                <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999' }}>
                   Configure the two finals matches using the dropdowns below
                 </p>
               )}
