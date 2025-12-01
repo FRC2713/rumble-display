@@ -10,9 +10,11 @@ import {
 import type { Match } from './types/Match'
 import { CsvLoader } from './services/CsvLoader'
 import { TeamLoader } from './services/TeamLoader'
+import { RankingsLoader } from './services/RankingsLoader'
+import { EliminationMatchGenerator } from './services/EliminationMatchGenerator'
 import { TableEditor } from './components/TableEditor'
 import { TeamEditor } from './components/TeamEditor'
-import { EliminationOnDeckTable } from './components/EliminationOnDeckTable'
+import { RankingsTable, type TeamRanking } from './components/RankingsTable'
 
 function App() {
   const [matches, setMatches] = useState<Match[]>([])
@@ -25,9 +27,9 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(60)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(45)
-  const [pulseDuration, setPulseDuration] = useState<number>(10)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(20)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(20)
+  const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
   const [pulseEnabled, setPulseEnabled] = useState<boolean>(true)
@@ -39,26 +41,21 @@ function App() {
   const [defaultMatches, setDefaultMatches] = useState<Match[]>([])
   const [useTeamNames, setUseTeamNames] = useState<boolean>(true)
   const [isEliminationMode, setIsEliminationMode] = useState<boolean>(false)
-  const [eliminationMatch, setEliminationMatch] = useState<Match>({
-    number: 0,
-    r1: '',
-    r2: '',
-    b1: '',
-    b2: '',
-    g1: '',
-    g2: ''
-  })
-  const [onDeckEliminationMatches, setOnDeckEliminationMatches] = useState<Match[]>(
-    Array.from({ length: 10 }, (_, i) => ({
-      number: i,
-      r1: '',
-      r2: '',
-      b1: '',
-      b2: '',
-      g1: '',
-      g2: ''
+  const [eliminationPhase, setEliminationPhase] = useState<'setup' | 'matches' | 'finals'>('setup')
+  const [teamCount, setTeamCount] = useState<number>(30)
+  const [rankings, setRankings] = useState<TeamRanking[]>(
+    Array.from({ length: 30 }, (_, i) => ({
+      rank: i + 1,
+      teamName: '',
+      teamNumber: ''
     }))
   )
+  const [eliminationMatches, setEliminationMatches] = useState<Match[]>([])
+  const [eliminationCurrentIndex, setEliminationCurrentIndex] = useState<number>(0)
+  const [finalsMatches, setFinalsMatches] = useState<Match[]>(
+    EliminationMatchGenerator.createFinalsMatches()
+  )
+  const [finalsCurrentIndex, setFinalsCurrentIndex] = useState<number>(0)
   const [hiddenTables, setHiddenTables] = useState<Set<string>>(new Set())
   const [preservedMatches, setPreservedMatches] = useState<Match[]>([])
   const [preservedIndex, setPreservedIndex] = useState<number>(0)
@@ -112,48 +109,72 @@ function App() {
   }
 
   const getTeamDisplay = (teamNumber: string): string => {
+    // Check if this looks like a team number (all digits)
+    const isNumeric = /^\d+$/.test(teamNumber)
+
     if (useTeamNames) {
-      return TeamLoader.getTeamDisplay(teamNumber, teamNames)
+      // If it's a numeric value, try to get the team name from the map
+      if (isNumeric) {
+        return TeamLoader.getTeamDisplay(teamNumber, teamNames)
+      }
+      // Otherwise it's already a team name, display as-is
+      return teamNumber
     }
-    return `#${teamNumber}`
+
+    // In number mode, only add # prefix if it's actually a number
+    if (isNumeric) {
+      return `#${teamNumber}`
+    }
+    // If it's a team name, display as-is
+    return teamNumber
   }
 
-  const handleSetEliminationMatch = () => {
+  // Get sorted team numbers for dropdowns
+  const getSortedTeamNumbers = (): string[] => {
+    const teamNumbers = Array.from(teamNames.keys())
+
+    if (useTeamNames) {
+      // Sort alphabetically by team name
+      return teamNumbers.sort((a, b) => {
+        const nameA = teamNames.get(a) || a
+        const nameB = teamNames.get(b) || b
+        return nameA.localeCompare(nameB)
+      })
+    } else {
+      // Sort numerically by team number
+      return teamNumbers.sort((a, b) => parseInt(a) - parseInt(b))
+    }
+  }
+
+  const handleSetEliminationMode = () => {
     // Preserve current matches and index before entering elimination mode
     setPreservedMatches(matches)
     setPreservedIndex(currentIndex)
 
     setIsEliminationMode(true)
+    setEliminationPhase('setup')
     setMatches([]) // Clear the deck
     setCurrentIndex(0)
-    // Initialize with empty teams
-    setEliminationMatch({
-      number: 0,
-      r1: '',
-      r2: '',
-      b1: '',
-      b2: '',
-      g1: '',
-      g2: ''
-    })
-    setOnDeckEliminationMatches(
-      Array.from({ length: 10 }, (_, i) => ({
-        number: i,
-        r1: '',
-        r2: '',
-        b1: '',
-        b2: '',
-        g1: '',
-        g2: ''
-      }))
-    )
   }
 
-  const handleEliminationTeamChange = (position: 'r1' | 'r2' | 'b1' | 'b2' | 'g1' | 'g2', teamNumber: string) => {
-    setEliminationMatch(prev => ({
-      ...prev,
-      [position]: teamNumber
-    }))
+  const handleStartEliminationMatches = () => {
+    // Generate elimination matches from rankings
+    const generatedMatches = EliminationMatchGenerator.generateMatches(rankings)
+    setEliminationMatches(generatedMatches)
+    setEliminationCurrentIndex(0)
+    setEliminationPhase('matches')
+  }
+
+  const handleStartFinalsMatches = () => {
+    setEliminationPhase('finals')
+    setFinalsCurrentIndex(0)
+  }
+
+  const handleFinalsTeamChange = (matchIndex: number, position: 'r1' | 'r2' | 'g1' | 'g2' | 'b1' | 'b2', teamNumber: string) => {
+    const newMatches = finalsMatches.map((match, idx) =>
+      idx === matchIndex ? { ...match, [position]: teamNumber } : match
+    )
+    setFinalsMatches(newMatches)
   }
 
   const handleExitEliminationMode = () => {
@@ -162,27 +183,36 @@ function App() {
     setCurrentIndex(preservedIndex)
 
     setIsEliminationMode(false)
-    setEliminationMatch({
-      number: 0,
-      r1: '',
-      r2: '',
-      b1: '',
-      b2: '',
-      g1: '',
-      g2: ''
-    })
-    setOnDeckEliminationMatches(
-      Array.from({ length: 10 }, (_, i) => ({
-        number: i,
-        r1: '',
-        r2: '',
-        b1: '',
-        b2: '',
-        g1: '',
-        g2: ''
-      }))
-    )
+    setEliminationPhase('setup')
+    setEliminationMatches([])
+    setEliminationCurrentIndex(0)
+    setFinalsMatches(EliminationMatchGenerator.createFinalsMatches())
+    setFinalsCurrentIndex(0)
     setHiddenTables(new Set())
+  }
+
+  const handleTeamCountChange = (count: number) => {
+    setTeamCount(count)
+    const newRankings = Array.from({ length: count }, (_, i) => ({
+      rank: i + 1,
+      teamName: rankings[i]?.teamName || '',
+      teamNumber: rankings[i]?.teamNumber || ''
+    }))
+    setRankings(newRankings)
+  }
+
+  const handleLoadRankingsCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const loadedRankings = await RankingsLoader.loadFromFile(file)
+      setRankings(loadedRankings)
+      setTeamCount(loadedRankings.length)
+    } catch (error) {
+      console.error('Error loading rankings CSV:', error)
+      setLoadError('Failed to load rankings CSV')
+    }
   }
 
   const handleHideTable = (tableColor: string) => {
@@ -198,21 +228,21 @@ function App() {
   }
 
   const handleNextEliminationMatch = () => {
-    // Copy first on-deck match to current match
-    setEliminationMatch(onDeckEliminationMatches[0])
-    // Shift all on-deck matches up and add a new empty one at the end
-    setOnDeckEliminationMatches(prev => [
-      ...prev.slice(1),
-      {
-        number: 0,
-        r1: '',
-        r2: '',
-        b1: '',
-        b2: '',
-        g1: '',
-        g2: ''
+    if (eliminationPhase === 'matches') {
+      // Move to next elimination match
+      if (eliminationCurrentIndex + 1 < eliminationMatches.length) {
+        setEliminationCurrentIndex(eliminationCurrentIndex + 1)
+      } else {
+        // All elimination matches complete, move to finals
+        handleStartFinalsMatches()
       }
-    ])
+    } else if (eliminationPhase === 'finals') {
+      // Move to next finals match
+      if (finalsCurrentIndex + 1 < finalsMatches.length) {
+        setFinalsCurrentIndex(finalsCurrentIndex + 1)
+      }
+    }
+
     // Trigger pulsing animation
     if (pulseEnabled) {
       setIsPulsing(true)
@@ -221,9 +251,6 @@ function App() {
       }, pulseDuration * 1000)
     }
   }
-
-  // Get sorted list of all team numbers for dropdown
-  const teamNumbersList = Array.from(teamNames.keys()).sort((a, b) => parseInt(a) - parseInt(b))
 
   // ======= Current Match Managing =======
   const cycleMatches = () => {
@@ -287,7 +314,12 @@ function App() {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         e.preventDefault()
-        createConfetti()
+        // Use combined confetti (both sprinkle and lego) in elimination/finals mode
+        if (isEliminationMode) {
+          createCombinedConfetti()
+        } else {
+          createConfetti()
+        }
         lastTimeRef.current = 0
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current)
@@ -303,7 +335,7 @@ function App() {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [animate, createConfetti])
+  }, [animate, createConfetti, createCombinedConfetti, isEliminationMode])
 
   useEffect(() => {
     if (confettiParticles.length === 0 && animationFrameRef.current) {
@@ -315,30 +347,44 @@ function App() {
   // ======= Table Animations =======
   useEffect(() => {
     // Enable animations in both regular mode (when matches exist) and elimination mode
-    if ((matches.length === 0 && !isEliminationMode) || tableSpinInterval <= 0 || !tableSpinEnabled) return
+    const shouldAnimate = isEliminationMode
+      ? eliminationPhase !== 'setup'
+      : matches.length > 0
+
+    if (!shouldAnimate || tableSpinInterval <= 0 || !tableSpinEnabled) return
 
     const spinAnimation = TableSpinAnimation.createSequentialSpin(
-      3, // Always 3 tables
-      isEliminationMode ? 3 : matches.length, // Use 3 in elimination mode to spin all tables
-      isEliminationMode ? 0 : currentIndex,
       setSpinningTableIndex,
-      isPulsing
+      isPulsing,
+      hiddenTables
     )
 
     const scheduler = new AnimationScheduler(spinAnimation, tableSpinInterval, tableSpinEnabled)
     scheduler.start()
 
     return () => scheduler.stop()
-  }, [matches.length, tableSpinInterval, currentIndex, isPulsing, tableSpinEnabled, isEliminationMode])
+  }, [matches.length, eliminationMatches.length, finalsMatches.length, tableSpinInterval, currentIndex, eliminationCurrentIndex, finalsCurrentIndex, isPulsing, tableSpinEnabled, isEliminationMode, eliminationPhase, hiddenTables])
 
   // ======= On-Deck Animations =======
   useEffect(() => {
     // Enable animations in both regular mode (when matches exist) and elimination mode
-    if ((matches.length === 0 && !isEliminationMode) || onDeckJiggleInterval <= 0 || !onDeckJiggleEnabled) return
+    const shouldAnimate = isEliminationMode
+      ? eliminationPhase !== 'setup'
+      : matches.length > 0
+
+    if (!shouldAnimate || onDeckJiggleInterval <= 0 || !onDeckJiggleEnabled) return
+
+    const totalMatches = isEliminationMode
+      ? (eliminationPhase === 'matches' ? eliminationMatches.length : finalsMatches.length)
+      : matches.length
+
+    const currentIdx = isEliminationMode
+      ? (eliminationPhase === 'matches' ? eliminationCurrentIndex : finalsCurrentIndex)
+      : currentIndex
 
     const jiggleAnimation = OnDeckJiggleAnimation.createSequentialJiggle(
-      isEliminationMode ? 10 : matches.length, // Use 10 on-deck matches in elimination mode
-      isEliminationMode ? -1 : currentIndex, // Use -1 as current index in elimination mode (so all 10 on-deck are animated)
+      totalMatches,
+      currentIdx,
       setJigglingOnDeckIndex,
       isPulsing
     )
@@ -347,11 +393,27 @@ function App() {
     scheduler.start()
 
     return () => scheduler.stop()
-  }, [matches.length, onDeckJiggleInterval, currentIndex, onDeckJiggleEnabled, isPulsing, isEliminationMode])
+  }, [matches.length, eliminationMatches.length, finalsMatches.length, onDeckJiggleInterval, currentIndex, eliminationCurrentIndex, finalsCurrentIndex, onDeckJiggleEnabled, isPulsing, isEliminationMode, eliminationPhase])
 
   const currentMatch = matches[currentIndex]
   // Show all remaining matches as on-deck (will be limited by CSS overflow)
   const onDeckMatches = matches.slice(currentIndex + 1)
+
+  // Determine which match to display in elimination mode
+  const displayMatch = isEliminationMode
+    ? (eliminationPhase === 'matches'
+      ? eliminationMatches[eliminationCurrentIndex]
+      : eliminationPhase === 'finals'
+      ? finalsMatches[finalsCurrentIndex]
+      : null)
+    : currentMatch
+
+  // Determine on-deck matches for elimination mode
+  const eliminationOnDeckMatches = eliminationPhase === 'matches'
+    ? eliminationMatches.slice(eliminationCurrentIndex + 1)
+    : eliminationPhase === 'finals'
+    ? finalsMatches.slice(finalsCurrentIndex + 1)
+    : []
 
   if (matches.length === 0 && !isEliminationMode) {
     return (
@@ -534,7 +596,7 @@ function App() {
       <div className="controls">
         {!isEliminationMode ? (
           currentIndex === matches.length - 1 && matches.length > 0 ? (
-            <button onClick={handleSetEliminationMatch} className="elimination-button">
+            <button onClick={handleSetEliminationMode} className="elimination-button">
               Go To Eliminations
             </button>
           ) : (
@@ -542,11 +604,32 @@ function App() {
               Next Match
             </button>
           )
+        ) : eliminationPhase === 'setup' ? (
+          <>
+            <button onClick={handleStartEliminationMatches} className="cycle-button">
+              Start Elimination Matches
+            </button>
+            <button onClick={handleExitEliminationMode} className="cycle-button">
+              Exit Eliminations
+            </button>
+          </>
+        ) : eliminationPhase === 'finals' ? (
+          <>
+            <button onClick={handleExitEliminationMode} className="cycle-button">
+              Exit Eliminations
+            </button>
+          </>
         ) : (
           <>
-            <button onClick={handleNextEliminationMatch} className="cycle-button">
-              Next Match
-            </button>
+            {eliminationCurrentIndex === eliminationMatches.length - 1 ? (
+              <button onClick={handleNextEliminationMatch} className="elimination-button">
+                Go To Finals
+              </button>
+            ) : (
+              <button onClick={handleNextEliminationMatch} className="cycle-button">
+                Next Match
+              </button>
+            )}
             <button onClick={handleExitEliminationMode} className="cycle-button">
               Exit Eliminations
             </button>
@@ -568,48 +651,110 @@ function App() {
             </span>
           </label>
         </div>
-        <div className="control-group match-range-group">
-          <label htmlFor="current-match">Current Match:</label>
-          <input
-            id="current-match"
-            type="number"
-            min="1"
-            max={matches.length}
-            value={startMatchInput}
-            onChange={handleMatchIndexChange}
-          />
-          <span className="status-text">of {matches.length}</span>
-        </div>
+        {/* Hide Current Match input in Finals mode */}
+        {!(isEliminationMode && eliminationPhase === 'finals') && (
+          <div className="control-group match-range-group">
+            <label htmlFor="current-match">Current Match:</label>
+            <input
+              id="current-match"
+              type="number"
+              min="1"
+              max={matches.length}
+              value={startMatchInput}
+              onChange={handleMatchIndexChange}
+            />
+            <span className="status-text">of {matches.length}</span>
+          </div>
+        )}
       </div>
 
       <div className="display-area">
-        <div className="active-tables">
-          <h2>{isEliminationMode ? 'Elimination Match' : 'Current Match'}</h2>
-          {(currentMatch || isEliminationMode) && (
-            <div className={`tables-grid ${isEliminationMode ? 'elimination-mode' : ''}`}>
+        {isEliminationMode && eliminationPhase === 'setup' ? (
+          <>
+            {/* Show rankings first during setup */}
+            <div className="on-deck on-deck-setup">
+              <div className="on-deck-header">
+                <h2>Team Rankings</h2>
+                {!isTipVisible && (
+                  <button className="show-tip-button" onClick={() => setIsTipVisible(true)} title="Show Tip">
+                    💡
+                  </button>
+                )}
+              </div>
+              {isTipVisible && (
+                <div className="table-editor-instructions">
+                  <button className="hide-table-button" onClick={() => setIsTipVisible(false)} title="Hide Tip">
+                    ×
+                  </button>
+                  <p>Enter team rankings below (1 = highest rank). Then press 'Start Elimination Matches'. Instead of entering manually you can either</p>
+                  <p>🔗 Paste from Excel/Google Sheets. Put your cursor in top-left-most cell of the table and then you paste (Ctrl+V or Cmd+V). ❗ Do not copy the table headers.</p>
+                  <p>OR</p>
+                  <div>
+                    <label htmlFor="rankings-csv-upload" style={{ cursor: 'pointer', color: '#4a9eff' }}>
+                    📑 Upload a CSV file with rankings
+                    </label>
+                    <input
+                      id="rankings-csv-upload"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleLoadRankingsCSV}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="on-deck-list">
+                <RankingsTable
+                  rankings={rankings}
+                  onChange={setRankings}
+                  teamCount={teamCount}
+                  onTeamCountChange={handleTeamCountChange}
+                />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="active-tables">
+              <h2>
+                {isEliminationMode
+                  ? (eliminationPhase === 'finals' ? 'Finals Match' : 'Elimination Match')
+                  : 'Current Match'}
+              </h2>
+              {isEliminationMode && eliminationPhase === 'finals' && (
+                <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999', textAlign: 'center' }}>
+                  Configure the two finals matches using the dropdowns below
+                </p>
+              )}
+              {displayMatch && (
+            <div className={`tables-grid ${isEliminationMode ? 'elimination-mode' : ''} ${isEliminationMode && eliminationPhase === 'finals' ? 'finals-mode' : ''}`}>
               {/* Red Table */}
               {!hiddenTables.has('red') && (
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 0 ? 'spin' : ''}`}
               >
-                {isEliminationMode && (
+                {isEliminationMode && eliminationPhase === 'finals' && (
                   <button className="hide-table-button" onClick={() => handleHideTable('red')} title="Hide Red Table">
                     ×
                   </button>
                 )}
                 <div className="table-number table-red">R</div>
-                <div className="match-number">{isEliminationMode ? 'Elimination Match' : `Match #${currentMatch?.number}`}</div>
+                <div className="match-number">
+                  {isEliminationMode
+                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                    : `Match #${displayMatch.number}`}
+                </div>
                 <div className="team team-red team-1">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">R1:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">R1:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.r1}
-                        onChange={(e) => handleEliminationTeamChange('r1', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.r1}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'r1', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -617,20 +762,20 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="R1">{getTeamDisplay(currentMatch!.r1)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.r1Rank ? `#${displayMatch.r1Rank}` : "R1"}>{getTeamDisplay(displayMatch.r1)}</div>
                   )}
                 </div>
                 <div className="team team-red team-2">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">R2:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">R2:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.r2}
-                        onChange={(e) => handleEliminationTeamChange('r2', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.r2}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'r2', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -638,7 +783,7 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="R2">{getTeamDisplay(currentMatch!.r2)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.r2Rank ? `#${displayMatch.r2Rank}` : "R2"}>{getTeamDisplay(displayMatch.r2)}</div>
                   )}
                 </div>
               </div>
@@ -649,24 +794,28 @@ function App() {
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 1 ? 'spin' : ''}`}
               >
-                {isEliminationMode && (
+                {isEliminationMode && eliminationPhase === 'finals' && (
                   <button className="hide-table-button" onClick={() => handleHideTable('green')} title="Hide Green Table">
                     ×
                   </button>
                 )}
                 <div className="table-number table-green">G</div>
-                <div className="match-number">{isEliminationMode ? 'Elimination Match' : `Match #${currentMatch?.number}`}</div>
+                <div className="match-number">
+                  {isEliminationMode
+                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                    : `Match #${displayMatch.number}`}
+                </div>
                 <div className="team team-green team-1">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">G1:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">G1:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.g1}
-                        onChange={(e) => handleEliminationTeamChange('g1', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.g1}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'g1', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -674,20 +823,20 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="G1">{getTeamDisplay(currentMatch!.g1)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.g1Rank ? `#${displayMatch.g1Rank}` : "G1"}>{getTeamDisplay(displayMatch.g1)}</div>
                   )}
                 </div>
                 <div className="team team-green team-2">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">G2:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">G2:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.g2}
-                        onChange={(e) => handleEliminationTeamChange('g2', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.g2}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'g2', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -695,7 +844,7 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="G2">{getTeamDisplay(currentMatch!.g2)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.g2Rank ? `#${displayMatch.g2Rank}` : "G2"}>{getTeamDisplay(displayMatch.g2)}</div>
                   )}
                 </div>
               </div>
@@ -706,24 +855,28 @@ function App() {
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 2 ? 'spin' : ''}`}
               >
-                {isEliminationMode && (
+                {isEliminationMode && eliminationPhase === 'finals' && (
                   <button className="hide-table-button" onClick={() => handleHideTable('blue')} title="Hide Blue Table">
                     ×
                   </button>
                 )}
                 <div className="table-number table-blue">B</div>
-                <div className="match-number">{isEliminationMode ? 'Elimination Match' : `Match #${currentMatch?.number}`}</div>
+                <div className="match-number">
+                  {isEliminationMode
+                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                    : `Match #${displayMatch.number}`}
+                </div>
                 <div className="team team-blue team-1">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">B1:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">B1:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.b1}
-                        onChange={(e) => handleEliminationTeamChange('b1', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.b1}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'b1', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -731,20 +884,20 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="B1">{getTeamDisplay(currentMatch!.b1)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.b1Rank ? `#${displayMatch.b1Rank}` : "B1"}>{getTeamDisplay(displayMatch.b1)}</div>
                   )}
                 </div>
                 <div className="team team-blue team-2">
-                  {isEliminationMode ? (
-                    <div className="team-dropdown-container">
-                      <span className="team-label-dropdown">B2:</span>
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    <div className="team-dropdown-container-inline">
+                      <span className="team-label-inline">B2:</span>
                       <select
-                        className="team-dropdown"
-                        value={eliminationMatch.b2}
-                        onChange={(e) => handleEliminationTeamChange('b2', e.target.value)}
+                        className="team-dropdown-inline"
+                        value={displayMatch.b2}
+                        onChange={(e) => handleFinalsTeamChange(finalsCurrentIndex, 'b2', e.target.value)}
                       >
                         <option value="">Select Team</option>
-                        {teamNumbersList.map(num => (
+                        {getSortedTeamNumbers().map(num => (
                           <option key={num} value={num}>
                             {getTeamDisplay(num)}
                           </option>
@@ -752,7 +905,7 @@ function App() {
                       </select>
                     </div>
                   ) : (
-                    <div className="team-name" data-label="B2">{getTeamDisplay(currentMatch!.b2)}</div>
+                    <div className="team-name" data-label={isEliminationMode && eliminationPhase === 'matches' && displayMatch.b2Rank ? `#${displayMatch.b2Rank}` : "B2"}>{getTeamDisplay(displayMatch.b2)}</div>
                   )}
                 </div>
               </div>
@@ -781,64 +934,82 @@ function App() {
               )}
             </div>
           )}
-        </div>
-
-        <div className="on-deck">
-          <div className="on-deck-header">
-            <h2>On Deck</h2>
-            {isEliminationMode && !isTipVisible && (
-              <button className="show-tip-button" onClick={() => setIsTipVisible(true)} title="Show Tip">
-                💡
-              </button>
-            )}
-          </div>
-          {isEliminationMode && isTipVisible && (
-            <div className="table-editor-instructions">
-              <button className="hide-table-button" onClick={() => setIsTipVisible(false)} title="Hide Tip">
-                ×
-              </button>
-              <p>Set a match with the dropdowns above. Or fill out the table below and use the "Next Match" button</p>
-              <p>💡 Tip: You can paste from Excel/Google Sheets! Click any cell and paste (Ctrl+V or Cmd+V)</p>
             </div>
-          )}
-          <div className="on-deck-list">
-            {isEliminationMode ? (
-              <EliminationOnDeckTable
-                matches={onDeckEliminationMatches}
-                onChange={setOnDeckEliminationMatches}
-              />
-            ) : (
-              onDeckMatches.map((match, index) => (
-              <div key={match.number} className={`on-deck-card-compact ${jigglingOnDeckIndex === index ? 'jiggle' : ''}`}>
-                <div className="match-number-ondeck">Match #{match.number}:</div>
-                <div className="team-inline team-inline-red team-inline-1">
-                  <span className="team-label-small">R1:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.r1)}</span>
-                </div>
-                <div className="team-inline team-inline-red team-inline-2">
-                  <span className="team-label-small">R2:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.r2)}</span>
-                </div>
-                <div className="team-inline team-inline-green team-inline-1">
-                  <span className="team-label-small">G1:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.g1)}</span>
-                </div>
-                <div className="team-inline team-inline-green team-inline-2">
-                  <span className="team-label-small">G2:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.g2)}</span>
-                </div>
-                <div className="team-inline team-inline-blue team-inline-1">
-                  <span className="team-label-small">B1:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.b1)}</span>
-                </div>
-                <div className="team-inline team-inline-blue team-inline-2">
-                  <span className="team-label-small">B2:</span>
-                  <span className="team-name-small">{getTeamDisplay(match.b2)}</span>
-                </div>
+
+            {/* Only show on-deck section when not in finals */}
+            {!(isEliminationMode && eliminationPhase === 'finals') && (
+            <div className="on-deck">
+              <div className="on-deck-header">
+                <h2>On Deck</h2>
               </div>
-            )))}
-          </div>
-        </div>
+              <div className="on-deck-list">
+                {isEliminationMode ? (
+                  eliminationOnDeckMatches.map((match, index) => (
+                  <div key={index} className={`on-deck-card-compact ${jigglingOnDeckIndex === index ? 'jiggle' : ''}`}>
+                    <div className="match-number-ondeck">
+                      {eliminationPhase === 'matches' ? `Elim Match ${eliminationCurrentIndex + index + 2}` : 'Finals Match'}:
+                    </div>
+                    <div className="team-inline team-inline-red team-inline-1">
+                      <span className="team-label-small">R1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.r1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-red team-inline-2">
+                      <span className="team-label-small">R2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.r2)}</span>
+                    </div>
+                    <div className="team-inline team-inline-green team-inline-1">
+                      <span className="team-label-small">G1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.g1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-green team-inline-2">
+                      <span className="team-label-small">G2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.g2)}</span>
+                    </div>
+                    <div className="team-inline team-inline-blue team-inline-1">
+                      <span className="team-label-small">B1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.b1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-blue team-inline-2">
+                      <span className="team-label-small">B2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.b2)}</span>
+                    </div>
+                  </div>
+                ))
+                ) : (
+                  onDeckMatches.map((match, index) => (
+                  <div key={match.number} className={`on-deck-card-compact ${jigglingOnDeckIndex === index ? 'jiggle' : ''}`}>
+                    <div className="match-number-ondeck">Match #{match.number}:</div>
+                    <div className="team-inline team-inline-red team-inline-1">
+                      <span className="team-label-small">R1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.r1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-red team-inline-2">
+                      <span className="team-label-small">R2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.r2)}</span>
+                    </div>
+                    <div className="team-inline team-inline-green team-inline-1">
+                      <span className="team-label-small">G1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.g1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-green team-inline-2">
+                      <span className="team-label-small">G2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.g2)}</span>
+                    </div>
+                    <div className="team-inline team-inline-blue team-inline-1">
+                      <span className="team-label-small">B1:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.b1)}</span>
+                    </div>
+                    <div className="team-inline team-inline-blue team-inline-2">
+                      <span className="team-label-small">B2:</span>
+                      <span className="team-name-small">{getTeamDisplay(match.b2)}</span>
+                    </div>
+                  </div>
+                )))}
+              </div>
+            </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

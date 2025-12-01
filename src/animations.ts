@@ -60,27 +60,36 @@ export class AnimationScheduler {
 
 export class TableSpinAnimation {
   static createSequentialSpin(
-    numTables: number,
-    matchesLength: number,
-    currentIndex: number,
     setSpinningTableIndex: (index: number | ((prev: number) => number)) => void,
-    isPulsing: boolean
+    isPulsing: boolean,
+    hiddenTables?: Set<string>
   ) {
     return () => {
       // Don't spin if pulsing
       if (isPulsing) return
 
-      const activeMatchesCount = Math.min(numTables, matchesLength - currentIndex)
-      if (activeMatchesCount === 0) return
+      // Map table indices to colors
+      const tableColors = ['red', 'green', 'blue']
 
-      for (let i = 0; i < activeMatchesCount; i++) {
-        setTimeout(() => {
-          setSpinningTableIndex(i)
-          setTimeout(() => {
-            setSpinningTableIndex(prev => prev === i ? -1 : prev)
-          }, 1000)
-        }, i * 800) // 0.8 second delay between each table
+      // Get visible table indices
+      const visibleIndices: number[] = []
+      for (let i = 0; i < 3; i++) {
+        if (!hiddenTables || !hiddenTables.has(tableColors[i])) {
+          visibleIndices.push(i)
+        }
       }
+
+      if (visibleIndices.length === 0) return
+
+      // Spin each visible table sequentially
+      visibleIndices.forEach((tableIndex, sequenceIndex) => {
+        setTimeout(() => {
+          setSpinningTableIndex(tableIndex)
+          setTimeout(() => {
+            setSpinningTableIndex(prev => prev === tableIndex ? -1 : prev)
+          }, 1000)
+        }, sequenceIndex * 800) // 0.8 second delay between each table
+      })
     }
   }
 }
@@ -132,7 +141,7 @@ export class ConfettiAnimation {
     const particles: ConfettiParticle[] = []
 
     const shape = useLego ? 'lego' : 'regular'
-    const nConfetti = (useLego ? 60 : 700) + Math.random() * 100
+    const nConfetti = (useLego ? 60 : 500) + Math.random() * (useLego ? 50 : 100)
     for (let i = 0; i < nConfetti; i++) {
       // Spawn at either left or right edge
       const spawnLeft = Math.random() < 0.5
@@ -173,7 +182,7 @@ export class ConfettiAnimation {
     let particleId = 0
 
     // Create regular confetti
-    const nRegular = 700 + Math.random() * 100
+    const nRegular = 500 + Math.random() * 100
     for (let i = 0; i < nRegular; i++) {
       const spawnLeft = Math.random() < 0.5
       const yNoise = Math.random() * (window.innerHeight / 2)
@@ -203,7 +212,7 @@ export class ConfettiAnimation {
     }
 
     // Create LEGO confetti
-    const nLego = 60 + Math.random() * 100
+    const nLego = 60 + Math.random() * 50
     for (let i = 0; i < nLego; i++) {
       const spawnLeft = Math.random() < 0.5
       const yNoise = Math.random() * (window.innerHeight / 2)
