@@ -45,8 +45,8 @@ export class AnimationScheduler {
   }
 
   private scheduleNext() {
-    // Add random variation between -10 and +10 seconds
-    const randomVariation = (Math.random() * 20 - 10) * 1000
+    // Add random variation between -5 and +5 seconds
+    const randomVariation = (Math.random() * 10 - 5) * 1000
     const nextInterval = Math.max(1000, this.baseInterval * 1000 + randomVariation)
 
     this.timeout = setTimeout(() => {

@@ -27,8 +27,8 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(15)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(15)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(10)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(10)
   const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
@@ -294,6 +294,11 @@ function App() {
       if (!isNaN(value) && value >= 1 && value <= eliminationMatches.length) {
         setEliminationCurrentIndex(value - 1) // Convert to 0-based index
       }
+    } else if (isEliminationMode && eliminationPhase === 'finals') {
+      // Handle finals matches
+      if (!isNaN(value) && value >= 1 && value <= finalsMatches.length) {
+        setFinalsCurrentIndex(value - 1) // Convert to 0-based index
+      }
     } else if (!isEliminationMode) {
       // Handle regular matches
       if (!isNaN(value) && value >= 1 && value <= matches.length) {
@@ -306,10 +311,12 @@ function App() {
   useEffect(() => {
     if (isEliminationMode && eliminationPhase === 'matches') {
       setStartMatchInput(String(eliminationCurrentIndex + 1))
+    } else if (isEliminationMode && eliminationPhase === 'finals') {
+      setStartMatchInput(String(finalsCurrentIndex + 1))
     } else if (!isEliminationMode) {
       setStartMatchInput(String(currentIndex + 1))
     }
-  }, [currentIndex, eliminationCurrentIndex, isEliminationMode, eliminationPhase])
+  }, [currentIndex, eliminationCurrentIndex, finalsCurrentIndex, isEliminationMode, eliminationPhase])
 
   // ======= Confetti =======
   const createConfetti = useCallback(() => {
@@ -680,11 +687,11 @@ function App() {
               id="current-match"
               type="number"
               min="1"
-              max={matches.length}
+              max={isEliminationMode && eliminationPhase === 'matches' ? eliminationMatches.length : matches.length}
               value={startMatchInput}
               onChange={handleMatchIndexChange}
             />
-            <span className="status-text">of {matches.length}</span>
+            <span className="status-text">of {isEliminationMode && eliminationPhase === 'matches' ? eliminationMatches.length : matches.length}</span>
           </div>
         )}
       </div>

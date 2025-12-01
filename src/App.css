@@ -295,11 +295,10 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .back-button:hover {
-  transform: translateY(2px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
@@ -340,7 +339,8 @@ body {
 }
 
 .cycle-button:hover {
-  background-color: #4fa8c5;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
 }
 
 .matches-starting {
