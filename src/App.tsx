@@ -27,8 +27,8 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(30)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(10)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(20)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(20)
   const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
@@ -623,8 +623,37 @@ function App() {
           )}
         </div>
         <p className="instructions">
-          Note, once you start an event. The only way to edit these settings is to refresh the page and start over.
+          Once you start an event, you can use the buttons on the top bar to navigate preliminary and elimination matches.
         </p>
+        <div style={{
+          marginTop: '2rem',
+          paddingTop: '1rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          textAlign: 'center',
+          opacity: 0.6
+        }}>
+          <a
+            href="https://github.com/FRC2713/rumble-display"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              color: '#999',
+              textDecoration: 'none',
+              fontSize: '0.85rem',
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+          >
+            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            View on GitHub
+          </a>
+        </div>
       </div>
     )
   }
@@ -648,17 +677,30 @@ function App() {
       <div className="controls">
         {!isEliminationMode ? (
           currentIndex === matches.length - 1 && matches.length > 0 ? (
-            <button onClick={handleSetEliminationMode} className="elimination-button">
-              Go To Eliminations
-            </button>
+            <>
+              <div className="button-group">
+                <button onClick={handleSetEliminationMode} className="elimination-button secondary-button">
+                  Go To Eliminations
+                </button>
+                <button onClick={() => { setMatches([]); setCurrentIndex(0); }} className="back-button secondary-button">
+                  Back to Setup
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <button onClick={cycleMatches} className="cycle-button">
                 Next Match
               </button>
-              <button onClick={handleSetEliminationMode} className="elimination-button">
-                Skip to Eliminations
-              </button>
+              <div className="button-divider"></div>
+              <div className="button-group">
+                <button onClick={handleSetEliminationMode} className="elimination-button secondary-button">
+                  Skip to Eliminations
+                </button>
+                <button onClick={() => { setMatches([]); setCurrentIndex(0); }} className="back-button secondary-button">
+                  Back to Setup
+                </button>
+              </div>
             </>
           )
         ) : eliminationPhase === 'setup' ? (
@@ -666,34 +708,62 @@ function App() {
             <button
               onClick={handleStartEliminationMatches}
               className="cycle-button"
-              disabled={!rankings.some(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== ''))}
+              disabled={!rankings.every(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== ''))}
+              style={{
+                opacity: !rankings.every(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== '')) ? 0.5 : 1,
+                cursor: !rankings.every(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== '')) ? 'not-allowed' : 'pointer'
+              }}
             >
               Start Elimination Matches
             </button>
-            <button onClick={handleExitEliminationMode} className="back-button">
-              Back To Prelims
+            {!rankings.every(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== '')) && (
+              <div style={{
+                fontSize: '0.85rem',
+                color: '#ff9999',
+                marginTop: '0.5rem',
+                textAlign: 'center'
+              }}>
+                Please fill in all {rankings.length} teams in the rankings table ({rankings.filter(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== '')).length}/{rankings.length} completed)
+              </div>
+            )}
+            <div className="button-divider"></div>
+            <button onClick={handleExitEliminationMode} className="back-button secondary-button">
+              Back to Prelims
             </button>
           </>
         ) : eliminationPhase === 'finals' ? (
           <>
-            <button onClick={handleExitEliminationMode} className="back-button">
-              Back to Eliminations
+            <button onClick={() => { setEliminationPhase('matches'); setFinalsCurrentIndex(0); }} className="back-button">
+              Back to Elims
             </button>
           </>
         ) : (
           <>
             {eliminationCurrentIndex === eliminationMatches.length - 1 ? (
-              <button onClick={handleNextEliminationMatch} className="elimination-button">
-                Go To Finals
-              </button>
+              <div className="button-group">
+                <button onClick={handleNextEliminationMatch} className="elimination-button secondary-button">
+                  Go To Finals
+                </button>
+                <button onClick={() => { setEliminationPhase('setup'); setEliminationCurrentIndex(0); }} className="back-button secondary-button">
+                  Back To Rankings
+                </button>
+              </div>
             ) : (
-              <button onClick={handleNextEliminationMatch} className="cycle-button">
-                Next Match
-              </button>
+              <>
+                <button onClick={handleNextEliminationMatch} className="cycle-button">
+                  Next Match
+                </button>
+                <div className="button-divider"></div>
+                <div className="button-group">
+                  <button onClick={() => { setEliminationPhase('finals'); setFinalsCurrentIndex(0); }} className="elimination-button secondary-button">
+                    Skip to Finals
+                  </button>
+                  <button onClick={() => { setEliminationPhase('setup'); setEliminationCurrentIndex(0); }} className="back-button secondary-button">
+                    Back To Rankings
+                  </button>
+                </div>
+              </>
             )}
-            <button onClick={handleExitEliminationMode} className="back-button">
-              Back To Prelims
-            </button>
           </>
         )}
         <div className={`matches-starting ${isPulsing ? 'show' : 'hide'}`}>
@@ -748,9 +818,9 @@ function App() {
                     ×
                   </button>
                   <p>Enter team rankings below. Then press 'Start Elimination Matches'.</p>
-                  <p>🔗 Option 1: Copy & Paste from Excel/Google Sheets. Copy an ordered column of team names. Then put your cursor in top cell of the table below. Then Paste.❗Do not copy the table headers.</p>
+                  <p>🔗 Quick Option 1: Copy & Paste from Excel/Google Sheets. Copy an ordered column of team names. Then put your cursor in top cell of the table below. Then Paste.❗Do not copy a table header.</p>
                   <div>
-                    <p>📑 Option 2: Download the Nexus Ranking CSV (Judging&gt;View Rankings&gt;<img src="downloadicon.png" alt="downloadicon" style={{ height: '1.5em', width: 'auto', display: 'inline', verticalAlign: 'top', marginLeft: '2px', marginRight: '2px', filter: 'invert(0.6) brightness(2)' }} />&gt;Download Rankings CSV).&nbsp;
+                    <p>📑 Quick Option 2: Download the Nexus Ranking CSV (Judging&gt;View Rankings&gt;<img src="downloadicon.png" alt="downloadicon" style={{ height: '1.5em', width: 'auto', display: 'inline', verticalAlign: 'top', marginLeft: '2px', marginRight: '2px', filter: 'invert(0.6) brightness(2)' }} />&gt;Download Rankings CSV).&nbsp;
                       <label htmlFor="rankings-csv-upload" style={{ cursor: 'pointer', color: '#4a9eff' }}>
                       Then click here to Upload that CSV.
                       </label>
@@ -794,11 +864,9 @@ function App() {
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 0 ? 'spin' : ''}`}
               >
-                {isEliminationMode && eliminationPhase === 'finals' && (
-                  <button className="hide-table-button" onClick={() => handleHideTable('red')} title="Hide Red Table">
-                    ×
-                  </button>
-                )}
+                <button className="hide-table-button" onClick={() => handleHideTable('red')} title="Hide Red Table">
+                  ×
+                </button>
                 <div className="table-number table-red">R</div>
                 <div className="match-number">
                   {isEliminationMode
@@ -855,11 +923,9 @@ function App() {
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 1 ? 'spin' : ''}`}
               >
-                {isEliminationMode && eliminationPhase === 'finals' && (
-                  <button className="hide-table-button" onClick={() => handleHideTable('green')} title="Hide Green Table">
-                    ×
-                  </button>
-                )}
+                <button className="hide-table-button" onClick={() => handleHideTable('green')} title="Hide Green Table">
+                  ×
+                </button>
                 <div className="table-number table-green">G</div>
                 <div className="match-number">
                   {isEliminationMode
@@ -916,11 +982,9 @@ function App() {
               <div
                 className={`table-card vertical ${isPulsing ? 'pulse' : ''} ${spinningTableIndex === 2 ? 'spin' : ''}`}
               >
-                {isEliminationMode && eliminationPhase === 'finals' && (
-                  <button className="hide-table-button" onClick={() => handleHideTable('blue')} title="Hide Blue Table">
-                    ×
-                  </button>
-                )}
+                <button className="hide-table-button" onClick={() => handleHideTable('blue')} title="Hide Blue Table">
+                  ×
+                </button>
                 <div className="table-number table-blue">B</div>
                 <div className="match-number">
                   {isEliminationMode
@@ -975,7 +1039,7 @@ function App() {
           )}
 
           {/* Show hidden tables buttons */}
-          {isEliminationMode && hiddenTables.size > 0 && (
+          {hiddenTables.size > 0 && (
             <div className="show-tables-panel">
               <h3>Inactive Tables:</h3>
               {hiddenTables.has('red') && (

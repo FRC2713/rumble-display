@@ -263,17 +263,35 @@ body {
   position: relative;
 }
 
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.button-divider {
+  width: 1px;
+  height: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.3);
+  margin: 0 0.75rem;
+}
+
+.secondary-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .elimination-button {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, #cc6600 0%, #ff8800 100%);
+  color: #1a1a1a;
+  background: #22c55e;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 .elimination-button:hover {
@@ -289,8 +307,8 @@ body {
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: bold;
-  color: white;
-  background: linear-gradient(135deg, #c200cc5b 0%, #c200cc5b 100%);
+  color: #1a1a1a;
+  background: #ef4444;
   border: none;
   border-radius: 8px;
   cursor: pointer;
