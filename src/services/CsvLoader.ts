@@ -3,8 +3,8 @@ import type { Match } from '../types/Match'
 export class CsvLoader {
   /**
    * Parse CSV text content into Match objects
-   * CSV Format (with time): Match, Time, R1, R2, B1, B2, G1, G2
-   * CSV Format (without time): Match, R1, R2, B1, B2, G1, G2
+   * CSV Format (with time): Match, Time, R1, R2, G1, G2, B1, B2
+   * CSV Format (without time): Match, R1, R2, G1, G2, B1, B2
    */
   static parseCSV(text: string): Match[] {
     const lines = text.split('\n').filter(line => line.trim())
@@ -14,8 +14,8 @@ export class CsvLoader {
 
       // Detect format based on number of columns
       if (parts.length === 8) {
-        // Format with time: Match, Time, R1, R2, B1, B2, G1, G2
-        const [number, time, r1, r2, b1, b2, g1, g2] = parts
+        // Format with time: Match, Time, R1, R2, G1, G2, B1, B2
+        const [number, time, r1, r2, g1, g2, b1, b2] = parts
         return {
           number: parseInt(number),
           time: time || undefined,
@@ -27,8 +27,8 @@ export class CsvLoader {
           g2
         }
       } else {
-        // Format without time: Match, R1, R2, B1, B2, G1, G2
-        const [number, r1, r2, b1, b2, g1, g2] = parts
+        // Format without time: Match, R1, R2, G1, G2, B1, B2
+        const [number, r1, r2, g1, g2, b1, b2] = parts
         return {
           number: parseInt(number),
           r1,

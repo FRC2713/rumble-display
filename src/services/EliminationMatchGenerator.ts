@@ -4,7 +4,7 @@ import type { TeamRanking } from '../components/RankingsTable'
 export class EliminationMatchGenerator {
   /**
    * Match schedule from rhr25-elim-matches.csv
-   * Format: Match #,R1,R2,B1,B2,G1,G2 (values are rankings, not team numbers)
+   * Format: Match #,R1,R2,G1,G2,B1,B2 (values are rankings, not team numbers)
    * 1,1,30,2,29,3,28
    * 2,4,27,5,26,6,25
    * 3,7,24,8,23,9,22
@@ -12,11 +12,11 @@ export class EliminationMatchGenerator {
    * 5,13,18,14,17,15,16
    */
   private static readonly MATCH_SCHEDULE = [
-    { matchNum: 1, r1: 1, r2: 30, b1: 2, b2: 29, g1: 3, g2: 28 },
-    { matchNum: 2, r1: 4, r2: 27, b1: 5, b2: 26, g1: 6, g2: 25 },
-    { matchNum: 3, r1: 7, r2: 24, b1: 8, b2: 23, g1: 9, g2: 22 },
-    { matchNum: 4, r1: 10, r2: 21, b1: 11, b2: 20, g1: 12, g2: 19 },
-    { matchNum: 5, r1: 13, r2: 18, b1: 14, b2: 17, g1: 15, g2: 16 }
+    { matchNum: 1, r1: 1, r2: 30, g1: 2, g2: 29, b1: 3, b2: 28 },
+    { matchNum: 2, r1: 4, r2: 27, g1: 5, g2: 26, b1: 6, b2: 25 },
+    { matchNum: 3, r1: 7, r2: 24, g1: 8, g2: 23, b1: 9, b2: 22 },
+    { matchNum: 4, r1: 10, r2: 21, g1: 11, g2: 20, b1: 12, b2: 19 },
+    { matchNum: 5, r1: 13, r2: 18, g1: 14, g2: 17, b1: 15, b2: 16 }
   ]
 
   static generateMatches(rankings: TeamRanking[]): Match[] {
@@ -32,7 +32,7 @@ export class EliminationMatchGenerator {
       return []
     }
 
-    // Helper to get team by rank (1-based)
+    // Helper to get team by rank (1-indexed)
     const getTeamByRank = (rank: number): string => {
       const ranking = validRankings.find(r => r.rank === rank)
       if (ranking) {

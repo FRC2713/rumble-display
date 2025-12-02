@@ -27,8 +27,8 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(20)
-  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(20)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(30)
+  const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(30)
   const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
   const [onDeckJiggleEnabled, setOnDeckJiggleEnabled] = useState<boolean>(true)
@@ -55,6 +55,8 @@ function App() {
     EliminationMatchGenerator.createFinalsMatches()
   )
   const [finalsCurrentIndex, setFinalsCurrentIndex] = useState<number>(0)
+  const [finalsInActiveMode, setFinalsInActiveMode] = useState<boolean>(false)
+  const [finalsMatchNumber, setFinalsMatchNumber] = useState<string>('')
   const [hiddenTables, setHiddenTables] = useState<Set<string>>(new Set())
   const [preservedMatches, setPreservedMatches] = useState<Match[]>([])
   const [preservedIndex, setPreservedIndex] = useState<number>(0)
@@ -175,6 +177,22 @@ function App() {
       idx === matchIndex ? { ...match, [position]: teamNumber } : match
     )
     setFinalsMatches(newMatches)
+  }
+
+  const handleFinalsStartMatch = () => {
+    if (finalsInActiveMode) {
+      // Go back to setup mode (dropdowns)
+      setFinalsInActiveMode(false)
+    } else {
+      // Start match - trigger animations and switch to active mode
+      setFinalsInActiveMode(true)
+
+      // Trigger pulse animation
+      if (pulseEnabled) {
+        setIsPulsing(true)
+        setTimeout(() => setIsPulsing(false), pulseDuration * 1000)
+      }
+    }
   }
 
   const handleExitEliminationMode = () => {
@@ -727,13 +745,22 @@ function App() {
               </div>
             )}
             <div className="button-divider"></div>
-            <button onClick={handleExitEliminationMode} className="back-button secondary-button">
-              Back to Prelims
-            </button>
+            <div className="button-group">
+              <button onClick={() => { setEliminationPhase('finals'); setFinalsCurrentIndex(0); setFinalsInActiveMode(false); }} className="elimination-button secondary-button">
+                Skip to Finals
+              </button>
+              <button onClick={handleExitEliminationMode} className="back-button secondary-button">
+                Back to Prelims
+              </button>
+            </div>
           </>
         ) : eliminationPhase === 'finals' ? (
           <>
-            <button onClick={() => { setEliminationPhase('matches'); setFinalsCurrentIndex(0); }} className="back-button">
+            <button onClick={handleFinalsStartMatch} className="cycle-button">
+              {finalsInActiveMode ? 'Next Match' : 'Start Match'}
+            </button>
+            <div className="button-divider"></div>
+            <button onClick={() => { setEliminationPhase('matches'); setFinalsCurrentIndex(0); setFinalsInActiveMode(false); }} className="back-button secondary-button">
               Back to Elims
             </button>
           </>
@@ -822,7 +849,7 @@ function App() {
                   <div>
                     <p>📑 Quick Option 2: Download the Nexus Ranking CSV (Judging&gt;View Rankings&gt;<img src="downloadicon.png" alt="downloadicon" style={{ height: '1.5em', width: 'auto', display: 'inline', verticalAlign: 'top', marginLeft: '2px', marginRight: '2px', filter: 'invert(0.6) brightness(2)' }} />&gt;Download Rankings CSV).&nbsp;
                       <label htmlFor="rankings-csv-upload" style={{ cursor: 'pointer', color: '#4a9eff' }}>
-                      Then click here to Upload that CSV.
+                      Then click here to upload that CSV.
                       </label>
                       ❗Leave the CSV exactly how Nexus formatted it.
                     </p>
@@ -852,9 +879,14 @@ function App() {
                   ? (eliminationPhase === 'finals' ? 'Finals Match' : 'Elimination Match')
                   : 'Current Match'}
               </h2>
-              {isEliminationMode && eliminationPhase === 'finals' && (
+              {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode && (
                 <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999' }}>
-                  Configure the finals matches manually. Simply using the dropdowns to fill in each table's participants.
+                  Configure the finals matches manually. Use the dropdowns and inputs to fill in each table's information. Then press 'Start Match'.
+                </p>
+              )}
+              {isEliminationMode && eliminationPhase === 'finals' && finalsInActiveMode && (
+                <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999' }}>
+                  Press 'Next Match' to configure another finals match.
                 </p>
               )}
               {displayMatch && (
@@ -869,12 +901,36 @@ function App() {
                 </button>
                 <div className="table-number table-red">R</div>
                 <div className="match-number">
-                  {isEliminationMode
-                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    finalsInActiveMode ? (
+                      finalsMatchNumber ? `Finals Match #${finalsMatchNumber}` : 'Finals Match'
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                        <span>Finals Match #</span>
+                        <input
+                          type="number"
+                          value={finalsMatchNumber}
+                          onChange={(e) => setFinalsMatchNumber(e.target.value)}
+                          placeholder=""
+                          style={{
+                            width: '3rem',
+                            padding: '0.2rem 0.4rem',
+                            fontSize: '0.9rem',
+                            border: '1px solid #666',
+                            borderRadius: '4px',
+                            backgroundColor: '#2a2a2a',
+                            color: '#fff',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                    )
+                  ) : isEliminationMode
+                    ? `Elimination Match ${eliminationCurrentIndex + 1}`
                     : `Match #${displayMatch.number}`}
                 </div>
                 <div className="team team-red team-1">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">R1:</span>
                       <select
@@ -895,7 +951,7 @@ function App() {
                   )}
                 </div>
                 <div className="team team-red team-2">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">R2:</span>
                       <select
@@ -928,12 +984,36 @@ function App() {
                 </button>
                 <div className="table-number table-green">G</div>
                 <div className="match-number">
-                  {isEliminationMode
-                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    finalsInActiveMode ? (
+                      finalsMatchNumber ? `Finals Match #${finalsMatchNumber}` : 'Finals Match'
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                        <span>Finals Match #</span>
+                        <input
+                          type="number"
+                          value={finalsMatchNumber}
+                          onChange={(e) => setFinalsMatchNumber(e.target.value)}
+                          placeholder=""
+                          style={{
+                            width: '3rem',
+                            padding: '0.2rem 0.4rem',
+                            fontSize: '0.9rem',
+                            border: '1px solid #666',
+                            borderRadius: '4px',
+                            backgroundColor: '#2a2a2a',
+                            color: '#fff',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                    )
+                  ) : isEliminationMode
+                    ? `Elimination Match ${eliminationCurrentIndex + 1}`
                     : `Match #${displayMatch.number}`}
                 </div>
                 <div className="team team-green team-1">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">G1:</span>
                       <select
@@ -954,7 +1034,7 @@ function App() {
                   )}
                 </div>
                 <div className="team team-green team-2">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">G2:</span>
                       <select
@@ -987,12 +1067,36 @@ function App() {
                 </button>
                 <div className="table-number table-blue">B</div>
                 <div className="match-number">
-                  {isEliminationMode
-                    ? (eliminationPhase === 'finals' ? 'Finals Match' : `Elimination Match ${eliminationCurrentIndex + 1}`)
+                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                    finalsInActiveMode ? (
+                      finalsMatchNumber ? `Finals Match #${finalsMatchNumber}` : 'Finals Match'
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
+                        <span>Finals Match #</span>
+                        <input
+                          type="number"
+                          value={finalsMatchNumber}
+                          onChange={(e) => setFinalsMatchNumber(e.target.value)}
+                          placeholder=""
+                          style={{
+                            width: '3rem',
+                            padding: '0.2rem 0.4rem',
+                            fontSize: '0.9rem',
+                            border: '1px solid #666',
+                            borderRadius: '4px',
+                            backgroundColor: '#2a2a2a',
+                            color: '#fff',
+                            textAlign: 'center'
+                          }}
+                        />
+                      </div>
+                    )
+                  ) : isEliminationMode
+                    ? `Elimination Match ${eliminationCurrentIndex + 1}`
                     : `Match #${displayMatch.number}`}
                 </div>
                 <div className="team team-blue team-1">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">B1:</span>
                       <select
@@ -1013,7 +1117,7 @@ function App() {
                   )}
                 </div>
                 <div className="team team-blue team-2">
-                  {isEliminationMode && eliminationPhase === 'finals' ? (
+                  {isEliminationMode && eliminationPhase === 'finals' && !finalsInActiveMode ? (
                     <div className="team-dropdown-container-inline">
                       <span className="team-label-inline">B2:</span>
                       <select
