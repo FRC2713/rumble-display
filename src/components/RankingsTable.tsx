@@ -11,11 +11,9 @@ export interface TeamRanking {
 interface RankingsTableProps {
   rankings: TeamRanking[]
   onChange: (rankings: TeamRanking[]) => void
-  teamCount: number
-  onTeamCountChange: (count: number) => void
 }
 
-export function RankingsTable({ rankings, onChange, teamCount, onTeamCountChange }: RankingsTableProps) {
+export function RankingsTable({ rankings, onChange }: RankingsTableProps) {
   const updateCell = useCallback((rowIndex: number, field: 'teamName' | 'teamNumber', value: string) => {
     const newRankings = rankings.map((ranking, idx) =>
       idx === rowIndex ? { ...ranking, [field]: value } : ranking
@@ -88,13 +86,8 @@ export function RankingsTable({ rankings, onChange, teamCount, onTeamCountChange
       }
     })
 
-    // Update team count if we extended the array
-    if (maxNeededRows > teamCount) {
-      onTeamCountChange(maxNeededRows)
-    }
-
     onChange(newRankings)
-  }, [rankings, onChange, teamCount, onTeamCountChange, updateCell])
+  }, [rankings, onChange, updateCell])
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>, rowIndex: number, colIndex: number) => {
     if (e.key === 'Enter') {
@@ -116,29 +109,8 @@ export function RankingsTable({ rankings, onChange, teamCount, onTeamCountChange
     }
   }, [rankings.length])
 
-  const handleTeamCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value)
-    if (!isNaN(value) && value >= 1 && value <= 100) {
-      onTeamCountChange(value)
-    }
-  }
-
   return (
     <div className="rankings-container">
-      <div className="rankings-header">
-        <label htmlFor="team-count">
-          Number of Teams:
-          <input
-            id="team-count"
-            type="number"
-            min="1"
-            max="100"
-            value={teamCount}
-            onChange={handleTeamCountChange}
-            style={{ marginLeft: '0.5rem', width: '80px' }}
-          />
-        </label>
-      </div>
       <table className="ondeck-elimination-table rankings-table">
         <thead>
           <tr>

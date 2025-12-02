@@ -217,10 +217,10 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
             + Add Row
           </button>
           <button onClick={handleSave} className="editor-button save-button">
-            Start These Matches
+            Start Event w/ These Matches
           </button>
           <button onClick={onCancel} className="editor-button cancel-button">
-            Cancel
+            Go Back
           </button>
         </div>
       </div>

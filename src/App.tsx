@@ -27,7 +27,7 @@ function App() {
   const animationFrameRef = useRef<number | undefined>(undefined)
   const lastTimeRef = useRef<number>(0)
 
-  const [tableSpinInterval, setTableSpinInterval] = useState<number>(10)
+  const [tableSpinInterval, setTableSpinInterval] = useState<number>(30)
   const [onDeckJiggleInterval, setOnDeckJiggleInterval] = useState<number>(10)
   const [pulseDuration, setPulseDuration] = useState<number>(3)
   const [tableSpinEnabled, setTableSpinEnabled] = useState<boolean>(true)
@@ -42,7 +42,6 @@ function App() {
   const [useTeamNames, setUseTeamNames] = useState<boolean>(true)
   const [isEliminationMode, setIsEliminationMode] = useState<boolean>(false)
   const [eliminationPhase, setEliminationPhase] = useState<'setup' | 'matches' | 'finals'>('setup')
-  const [teamCount, setTeamCount] = useState<number>(30)
   const [rankings, setRankings] = useState<TeamRanking[]>(
     Array.from({ length: 30 }, (_, i) => ({
       rank: i + 1,
@@ -60,6 +59,7 @@ function App() {
   const [preservedMatches, setPreservedMatches] = useState<Match[]>([])
   const [preservedIndex, setPreservedIndex] = useState<number>(0)
   const [isTipVisible, setIsTipVisible] = useState<boolean>(true)
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>(false)
 
   // ======= Data Loading =======
   // Load default team names and matches on mount
@@ -200,16 +200,6 @@ function App() {
     setHiddenTables(new Set())
   }
 
-  const handleTeamCountChange = (count: number) => {
-    setTeamCount(count)
-    const newRankings = Array.from({ length: count }, (_, i) => ({
-      rank: i + 1,
-      teamName: rankings[i]?.teamName || '',
-      teamNumber: rankings[i]?.teamNumber || ''
-    }))
-    setRankings(newRankings)
-  }
-
   const handleLoadRankingsCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -217,7 +207,6 @@ function App() {
     try {
       const loadedRankings = await RankingsLoader.loadFromFile(file)
       setRankings(loadedRankings)
-      setTeamCount(loadedRankings.length)
     } catch (error) {
       console.error('Error loading rankings CSV:', error)
       setLoadError('Failed to load rankings CSV')
@@ -446,7 +435,7 @@ function App() {
   if (matches.length === 0 && !isEliminationMode) {
     return (
       <div className="upload-container">
-        <h1>Event Match Display</h1>
+        <h1>FLL Qualifier Display</h1>
         <div className="upload-section">
           {isLoading ? (
             <div className="loading-message">Loading matches...</div>
@@ -466,52 +455,79 @@ function App() {
             <>
               {loadError && <div className="error-message">{loadError}</div>}
 
+              {/* Simplified initial view */}
               <div className="data-source-options">
                 <div className="data-source-option">
-                  <h3>Set Match Schedule & Start</h3>
+                  <h3>Start Event</h3>
                   <div style={{display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center'}}>
                     <button
                       onClick={handleLoadDefaultMatches}
                       className="upload-label"
                       style={{border: 'none', cursor: 'pointer'}}
                     >
-                      Default<br/>(Rumble 2025)
-                    </button>
-                    <span style={{color: '#999', fontSize: '1.2rem', fontWeight: 'bold'}}>Or</span>
-                    <button
-                      onClick={() => setShowTableEditor(true)}
-                      className="upload-label"
-                      style={{border: 'none', cursor: 'pointer'}}
-                    >
-                      Open Table Editor
+                      Rumble 2025
                     </button>
                   </div>
                   <p className="instructions">
-                    Load default matches or enter manually
+                    Select a pre-loaded prelim match schedule and team list.
                   </p>
                 </div>
 
-                <div className="data-source-option" style={{padding: '1.5rem'}}>
-                  <h3 style={{fontSize: '1rem', marginBottom: '0.75rem'}}>Team Names</h3>
-                  <div style={{display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center'}}>
-                    <button
-                      onClick={() => setShowTeamEditor(true)}
-                      className="upload-label"
-                      style={{border: 'none', cursor: 'pointer', padding: '0.75rem 1.5rem', fontSize: '1rem'}}
-                    >
-                      Open Table Editor
-                    </button>
-                  </div>
-                  <p className="instructions" style={{fontSize: '0.8rem', marginTop: '0.5rem', marginBottom: '0'}}>
-                    Default (Rumble 2025) team list is loaded.
-                  </p>
+                {/* Advanced Options Toggle */}
+                <div style={{textAlign: 'center', marginTop: '1rem'}}>
+                  <button
+                    onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#4a9eff',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      textDecoration: 'underline',
+                      padding: '0.5rem'
+                    }}
+                  >
+                    {showAdvancedOptions ? 'Hide Advanced Options' : 'Advanced Options'}
+                  </button>
                 </div>
-              </div>
-            </>
-          )}
 
-          <div className="animation-config">
-            <h3>Animation Settings</h3>
+                {/* Advanced Options - hidden by default */}
+                {showAdvancedOptions && (
+                  <>
+                    <div className="data-source-option" style={{marginTop: '1rem', padding: '1.5rem'}}>
+                      <h3 style={{fontSize: '1rem', marginBottom: '0.75rem'}}>Custom Match Schedule</h3>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center'}}>
+                        <button
+                          onClick={() => setShowTableEditor(true)}
+                          className="upload-label"
+                          style={{border: 'none', cursor: 'pointer', padding: '0.75rem 1.5rem', fontSize: '1rem'}}
+                        >
+                          Open Table Editor
+                        </button>
+                      </div>
+                      <p className="instructions" style={{fontSize: '0.8rem', marginTop: '0.5rem', marginBottom: '0'}}>
+                        Enter custom match schedule manually
+                      </p>
+                    </div>
+
+                    <div className="data-source-option" style={{padding: '1.5rem'}}>
+                      <h3 style={{fontSize: '1rem', marginBottom: '0.75rem'}}>Custom Team Names</h3>
+                      <div style={{display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center'}}>
+                        <button
+                          onClick={() => setShowTeamEditor(true)}
+                          className="upload-label"
+                          style={{border: 'none', cursor: 'pointer', padding: '0.75rem 1.5rem', fontSize: '1rem'}}
+                        >
+                          Open Team Editor
+                        </button>
+                      </div>
+                      <p className="instructions" style={{fontSize: '0.8rem', marginTop: '0.5rem', marginBottom: '0'}}>
+                        Enter custom team names and numbers.
+                      </p>
+                    </div>
+
+                    <div className="animation-config">
+                      <h3>Animation Settings</h3>
 
             <div className="config-group">
               <label htmlFor="table-spin">
@@ -599,8 +615,16 @@ function App() {
                 </label>
               </div>
             </div>
-          </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
+        <p className="instructions">
+          Note, once you start an event. The only way to edit these settings is to refresh the page and start over.
+        </p>
       </div>
     )
   }
@@ -628,13 +652,22 @@ function App() {
               Go To Eliminations
             </button>
           ) : (
-            <button onClick={cycleMatches} className="cycle-button">
-              Next Match
-            </button>
+            <>
+              <button onClick={cycleMatches} className="cycle-button">
+                Next Match
+              </button>
+              <button onClick={handleSetEliminationMode} className="elimination-button">
+                Skip to Eliminations
+              </button>
+            </>
           )
         ) : eliminationPhase === 'setup' ? (
           <>
-            <button onClick={handleStartEliminationMatches} className="cycle-button">
+            <button
+              onClick={handleStartEliminationMatches}
+              className="cycle-button"
+              disabled={!rankings.some(r => (r.teamName && r.teamName.trim() !== '') || (r.teamNumber && r.teamNumber.trim() !== ''))}
+            >
               Start Elimination Matches
             </button>
             <button onClick={handleExitEliminationMode} className="back-button">
@@ -714,13 +747,15 @@ function App() {
                   <button className="hide-table-button" onClick={() => setIsTipVisible(false)} title="Hide Tip">
                     ×
                   </button>
-                  <p>Enter team rankings below (1 = highest rank). Then press 'Start Elimination Matches'. Instead of entering manually you can either</p>
-                  <p>🔗 Paste from Excel/Google Sheets. Put your cursor in top-left-most cell of the table and then you paste (Ctrl+V or Cmd+V). ❗ Do not copy the table headers.</p>
-                  <p>OR</p>
+                  <p>Enter team rankings below. Then press 'Start Elimination Matches'.</p>
+                  <p>🔗 Option 1: Copy & Paste from Excel/Google Sheets. Copy an ordered column of team names. Then put your cursor in top cell of the table below. Then Paste.❗Do not copy the table headers.</p>
                   <div>
-                    <label htmlFor="rankings-csv-upload" style={{ cursor: 'pointer', color: '#4a9eff' }}>
-                    📑 Upload a CSV file with rankings
-                    </label>
+                    <p>📑 Option 2: Download the Nexus Ranking CSV (Judging&gt;View Rankings&gt;<img src="downloadicon.png" alt="downloadicon" style={{ height: '1.5em', width: 'auto', display: 'inline', verticalAlign: 'top', marginLeft: '2px', marginRight: '2px', filter: 'invert(0.6) brightness(2)' }} />&gt;Download Rankings CSV).&nbsp;
+                      <label htmlFor="rankings-csv-upload" style={{ cursor: 'pointer', color: '#4a9eff' }}>
+                      Then click here to Upload that CSV.
+                      </label>
+                      ❗Leave the CSV exactly how Nexus formatted it.
+                    </p>
                     <input
                       id="rankings-csv-upload"
                       type="file"
@@ -735,8 +770,6 @@ function App() {
                 <RankingsTable
                   rankings={rankings}
                   onChange={setRankings}
-                  teamCount={teamCount}
-                  onTeamCountChange={handleTeamCountChange}
                 />
               </div>
             </div>
@@ -751,7 +784,7 @@ function App() {
               </h2>
               {isEliminationMode && eliminationPhase === 'finals' && (
                 <p style={{ fontSize: '0.9rem', marginBottom: '1rem', color: '#999' }}>
-                  Configure the two finals matches using the dropdowns below
+                  Configure the finals matches manually. Simply using the dropdowns to fill in each table's participants.
                 </p>
               )}
               {displayMatch && (
@@ -944,20 +977,20 @@ function App() {
           {/* Show hidden tables buttons */}
           {isEliminationMode && hiddenTables.size > 0 && (
             <div className="show-tables-panel">
-              <h3>Show Tables:</h3>
+              <h3>Inactive Tables:</h3>
               {hiddenTables.has('red') && (
                 <button className="show-table-button table-red" onClick={() => handleShowTable('red')}>
-                  Show Red
+                  Red
                 </button>
               )}
               {hiddenTables.has('green') && (
                 <button className="show-table-button table-green" onClick={() => handleShowTable('green')}>
-                  Show Green
+                  Green
                 </button>
               )}
               {hiddenTables.has('blue') && (
                 <button className="show-table-button table-blue" onClick={() => handleShowTable('blue')}>
-                  Show Blue
+                  Blue
                 </button>
               )}
             </div>
