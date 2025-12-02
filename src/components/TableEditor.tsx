@@ -9,10 +9,10 @@ interface TableRow {
   time: string
   r1: string
   r2: string
-  b1: string
-  b2: string
   g1: string
   g2: string
+  b1: string
+  b2: string
 }
 
 interface TableEditorProps {
@@ -36,7 +36,7 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
         b2: match.b2
       }))
     }
-    return [{ id: '1', match: '1', time: '', r1: '', r2: '', b1: '', b2: '', g1: '', g2: '' }]
+    return [{ id: '1', match: '1', time: '', r1: '', r2: '', g1: '', g2: '', b1: '', b2: '' }]
   })
   const [_selectedCell, setSelectedCell] = useState<{ rowId: string; colIndex: number } | null>(null)
   const tableRef = useRef<HTMLDivElement>(null)
@@ -53,10 +53,10 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
       time: '',
       r1: '',
       r2: '',
-      b1: '',
-      b2: '',
       g1: '',
-      g2: ''
+      g2: '',
+      b1: '',
+      b2: ''
     }])
   }, [rows])
 
@@ -92,7 +92,7 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
       // Single cell paste
       const currentRow = rows.find(r => r.id === rowId)
       if (currentRow) {
-        const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'b1', 'b2', 'g1', 'g2']
+        const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'g1', 'g2', 'b1', 'b2']
         updateCell(rowId, fields[colIndex], pastedText.trim())
       }
       return
@@ -121,16 +121,16 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
           time: '',
           r1: '',
           r2: '',
-          b1: '',
-          b2: '',
           g1: '',
-          g2: ''
+          g2: '',
+          b1: '',
+          b2: ''
         })
       }
 
       if (targetRowIndex < newRows.length) {
         const row = newRows[targetRowIndex]
-        const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'b1', 'b2', 'g1', 'g2']
+        const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'g1', 'g2', 'b1', 'b2']
 
         // Paste data starting from the selected column
         rowData.forEach((cellValue, dataColIndex) => {
@@ -149,7 +149,7 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
   }, [rows, updateCell])
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>, rowId: string, colIndex: number) => {
-    const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'b1', 'b2', 'g1', 'g2']
+    const fields: (keyof TableRow)[] = ['match', 'time', 'r1', 'r2', 'g1', 'g2', 'b1', 'b2']
     const rowIndex = rows.findIndex(r => r.id === rowId)
 
     if (e.key === 'Enter') {
@@ -202,10 +202,10 @@ export function TableEditor({ initialMatches, onSave, onCancel }: TableEditorPro
     { key: 'time' as const, label: 'Time', readonly: false },
     { key: 'r1' as const, label: 'R1', readonly: false },
     { key: 'r2' as const, label: 'R2', readonly: false },
-    { key: 'b1' as const, label: 'B1', readonly: false },
-    { key: 'b2' as const, label: 'B2', readonly: false },
     { key: 'g1' as const, label: 'G1', readonly: false },
-    { key: 'g2' as const, label: 'G2', readonly: false }
+    { key: 'g2' as const, label: 'G2', readonly: false },
+    { key: 'b1' as const, label: 'B1', readonly: false },
+    { key: 'b2' as const, label: 'B2', readonly: false }
   ]
 
   return (
